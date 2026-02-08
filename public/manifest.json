@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "PasteMagic – Smart Dev Parser",
+  "version": "1.0.0",
+  "description": "粘贴任意内容，自动识别并完成 JSON 格式化、编码解码、时间戳转换、DNS 解析、IP 归属地查询等开发者高频操作。",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ModuKit - 开发者工具箱"
+  },
+  "icons": {
+    "16": "pastemagic_32.png",
+    "32": "pastemagic_32.png",
+    "64": "pastemagic_64.png",
+    "128": "pastemagic_128.png"
+  },
+  "permissions": [
+  ],
+  "host_permissions": [
+    "https://free.freeipapi.com/",
+    "https://dns.alidns.com/"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}
