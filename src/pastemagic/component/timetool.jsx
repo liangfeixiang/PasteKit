@@ -211,17 +211,17 @@ export default function TimeTool({content}) {
         <div>
             {shouldShow && (
                 <div className="w-full border rounded p-3 space-y-2">
-                    {/* 解析结果 - 日期格式展示 */}
+                    {/* Parsing results - date format display */}
                     {result.showDate && (result.type !== 'other' && result.type !== 'invalid') && (
                         <div className="flex items-start gap-2">
-                            <span className="text-sm font-medium text-gray-600 w-32 text-right flex-shrink-0">日期格式:</span>
+                            <span className="text-sm font-medium text-gray-600 w-32 text-right flex-shrink-0">Date format:</span>
                             <span className="text-sm font-mono break-all bg-blue-100 px-2 py-1 rounded flex-1 min-w-0">
                                 {result.display}
                             </span>
                         </div>
                     )}
                     
-                    {/* 时间戳信息 */}
+                    {/* Timestamp information */}
                     {result.showTimestamp && result.timestamp && (
                         <div className="space-y-2">
                             {formatTimestampDisplay(result.timestamp).map((item, index) => (
@@ -235,16 +235,16 @@ export default function TimeTool({content}) {
                         </div>
                     )}
                     
-                    {/* 实时当前时间信息 */}
+                    {/* Real-time current time information */}
                     <div className="pt-2 border-t border-gray-200">
                         <div className="flex items-start gap-2">
-                            <span className="text-sm font-medium text-gray-600 w-32 text-right flex-shrink-0">当前时间:</span>
+                            <span className="text-sm font-medium text-gray-600 w-32 text-right flex-shrink-0">Current time:</span>
                             <span className="text-sm font-mono break-all bg-purple-100 px-2 py-1 rounded flex-1 min-w-0">
                                 {currentTimeInfo.formattedDate}
                             </span>
                         </div>
                         <div className="flex items-start gap-2 mt-1">
-                            <span className="text-sm font-medium text-gray-600 w-32 text-right flex-shrink-0">当前时间戳(ms):</span>
+                            <span className="text-sm font-medium text-gray-600 w-32 text-right flex-shrink-0">Current timestamp(ms):</span>
                             <span className="text-sm font-mono break-all bg-purple-100 px-2 py-1 rounded flex-1 min-w-0">
                                 {currentTimeInfo.timestamp}
                             </span>

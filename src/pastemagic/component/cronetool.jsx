@@ -15,28 +15,28 @@ const isValidCron = (str) => {
 };
 
 export default function CronTool({cronExpr}) {
-    console.info("crone utils " + cronExpr)
+    console.info("Cron utilities " + cronExpr)
     const generateNextRuns = (expr, count = 5) => {
         if (!isValidCron(expr)) {
-            return {error: '(输入不符合 Cron 表达式基本格式)'};
+            return {error: '(Input does not match basic Cron expression format)'};
         }
-        console.info("crone " + cronExpr);
+        console.info("Cron " + cronExpr);
 
         try {
-            // ✅ 使用 Croner
+            // ✅ Using Croner
             const job = new Cron(expr, {
-                paused: true,     // 不实际调度
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone // 使用本地时区
+                paused: true,     // Not actually scheduled
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone // Using local timezone
             });
 
             const runs = [];
             let next = job.nextRun();
             for (let i = 0; i < count && next; i++) {
                 runs.push(formatToYMDHMS(next));
-                next = job.nextRun(next); // 从上次时间继续推算
+                next = job.nextRun(next); // Continue calculation from last time
             }
 
-            job.stop(); // 清理
+            job.stop(); // Cleanup
             return {runs};
         } catch (err) {
             console.error('Croner error:', err);
@@ -46,7 +46,7 @@ export default function CronTool({cronExpr}) {
 
     const result = typeof cronExpr === 'string'
         ? generateNextRuns(cronExpr)
-        : {error: '(输入不是字符串)'};
+        : {error: '(Input is not a string)'};
 
     const {runs, error} = result;
 
@@ -54,7 +54,7 @@ export default function CronTool({cronExpr}) {
         <div>
             {isValidCron(cronExpr) && (
                 <div className="w-full  border rounded p-4">
-                    <h3 className="text-lg font-bold mb-2">Cron 执行时间预览</h3>
+                    <h3 className="text-lg font-bold mb-2">Cron Execution Time Preview</h3>
                     <div>
                         <p className="text-red-500">{error}</p>
                         <ul className="list-disc pl-5 space-y-1">

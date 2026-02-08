@@ -1,27 +1,27 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
-// URL工具函数
+// URL utility functions
 
-// URL编码
+// URL encoding
 const encodeUrl = (str) => {
     try {
         return encodeURIComponent(str);
     } catch (e) {
-        throw new Error('URL编码失败: ' + e.message);
+        throw new Error('URL encoding failed: ' + e.message);
     }
 };
 
-// URL解码
+// URL decoding
 const decodeUrl = (str) => {
     try {
         return decodeURIComponent(str);
     } catch (e) {
-        throw new Error('URL解码失败: ' + e.message);
+        throw new Error('URL decoding failed: ' + e.message);
     }
 };
 
-// 检测URL格式
+// Detect URL format
 const isValidUrl = (string) => {
     try {
         new URL(string);
@@ -31,9 +31,9 @@ const isValidUrl = (string) => {
     }
 };
 
-// 检测是否为URL编码格式
+// Detect if it's URL encoded format
 const isUrlEncoded = (str) => {
-    // 检查是否有百分号编码字符
+    // Check if there are percent-encoded characters
     const urlEncodedPattern = /%[0-9A-Fa-f]{2}/;
     return urlEncodedPattern.test(str);
 };
@@ -70,14 +70,14 @@ const encodeBase64 = (str) => {
     }
 };
 
-// 检测是否为十六进制编码
+// Detect if it's hexadecimal encoded
 const isHexEncoded = (str) => {
-    // 检查是否是十六进制字符串（通常以0x开头或只包含十六进制字符）
+    // Check if it's a hexadecimal string (usually starts with 0x or contains only hexadecimal characters)
     const hexRegex = /^(0x)?[0-9a-fA-F]+$/;
     return hexRegex.test(str) && str.length % 2 === 0;
 };
 
-// 十六进制解码
+// Hexadecimal decoding
 const decodeHex = (str) => {
     try {
         let cleanStr = str.replace(/^0x/i, '');
@@ -87,11 +87,11 @@ const decodeHex = (str) => {
         }
         return result;
     } catch (e) {
-        throw new Error('十六进制解码失败: ' + e.message);
+        throw new Error('Hexadecimal decoding failed: ' + e.message);
     }
 };
 
-// 十六进制编码
+// Hexadecimal encoding
 const encodeHex = (str) => {
     try {
         let result = '';
@@ -100,20 +100,20 @@ const encodeHex = (str) => {
         }
         return result;
     } catch (e) {
-        throw new Error('十六进制编码失败: ' + e.message);
+        throw new Error('Hexadecimal encoding failed: ' + e.message);
     }
 };
 
-// 使用专业二维码组件库，已移除自实现算法
+// Using professional QR code component library, self-implemented algorithm has been removed
 
 export default function UrlTool({ content }) {
-    console.log('🔗 UrlTool渲染:', {
+    console.log('🔗 UrlTool rendering:', {
         content: content?.substring(0, 50) + '...',
         hasContent: !!content,
         timestamp: Date.now()
     });
 
-    // 如果没有内容，不显示组件
+    // Don't display component if no content
     if (!content || content === undefined || content === null) {
         return null;
     }
@@ -124,18 +124,18 @@ export default function UrlTool({ content }) {
         original: '',
         qrcode: null,
         contentType: 'unknown', // 'url', 'url_encoded', 'base64', 'hex', 'other'
-        decodedType: '' // 记录解码类型
+        decodedType: '' // Record decoding type
     });
     const [error, setError] = useState(null);
     const [qrSize, setQrSize] = useState(200);
     const debounceTimerRef = useRef(null);
     const lastProcessedContentRef = useRef('');
 
-    console.log('🔄 URL工具状态更新:', { hasError: !!error });
+    console.log('🔄 URL tool state update:', { hasError: !!error });
 
-    // 处理编码解码的核心函数
+    // Core function to process encoding/decoding
     const processContent = useCallback((inputContent = content) => {
-        console.log('🚀 执行processContent:', {
+        console.log('🚀 Executing processContent:', {
             content: inputContent?.substring(0, 50) + '...',
             timestamp: Date.now()
         });
@@ -160,75 +160,75 @@ export default function UrlTool({ content }) {
                 original: trimmedContent
             };
 
-            // 检测内容类型并处理
+            // Detect content type and process
             if (isUrlEncoded(trimmedContent)) {
-                // 是URL编码内容，进行解码
+                // Is URL encoded content, perform decoding
                 try {
                     newResults.decoded = decodeUrl(trimmedContent);
                     newResults.contentType = 'url_encoded';
-                    newResults.decodedType = 'URL编码';
+                    newResults.decodedType = 'URL Encoding';
                     
-                    // 对解码后的内容再次编码，用于对比
+                    // Encode decoded content again for comparison
                     newResults.encoded = encodeUrl(newResults.decoded);
                 } catch (e) {
-                    // 解码失败
-                    setError('URL编码内容解码失败: ' + e.message);
+                    // Decoding failed
+                    setError('URL encoded content decoding failed: ' + e.message);
                     newResults.decoded = trimmedContent;
                     newResults.contentType = 'other';
                 }
             } else if (isBase64Encoded(trimmedContent)) {
-                // 是Base64编码内容，进行解码
+                // Is Base64 encoded content, perform decoding
                 try {
                     newResults.decoded = decodeBase64(trimmedContent);
                     newResults.contentType = 'base64';
                     newResults.decodedType = 'Base64';
                     
-                    // 对解码后的内容再次编码，用于对比
+                    // Encode decoded content again for comparison
                     newResults.encoded = encodeBase64(newResults.decoded);
                 } catch (e) {
-                    // 解码失败
-                    setError('Base64编码内容解码失败: ' + e.message);
+                    // Decoding failed
+                    setError('Base64 encoded content decoding failed: ' + e.message);
                     newResults.decoded = trimmedContent;
                     newResults.contentType = 'other';
                 }
             } else if (isHexEncoded(trimmedContent)) {
-                // 是十六进制编码内容，进行解码
+                // Is hexadecimal encoded content, perform decoding
                 try {
                     newResults.decoded = decodeHex(trimmedContent);
                     newResults.contentType = 'hex';
-                    newResults.decodedType = '十六进制';
+                    newResults.decodedType = 'Hexadecimal';
                     
-                    // 对解码后的内容再次编码，用于对比
+                    // Encode decoded content again for comparison
                     newResults.encoded = encodeHex(newResults.decoded);
                 } catch (e) {
-                    // 解码失败
-                    setError('十六进制编码内容解码失败: ' + e.message);
+                    // Decoding failed
+                    setError('Hexadecimal encoded content decoding failed: ' + e.message);
                     newResults.decoded = trimmedContent;
                     newResults.contentType = 'other';
                 }
             } else if (isValidUrl(trimmedContent)) {
-                // 是普通URL，进行编码
+                // Is regular URL, perform encoding
                 newResults.encoded = encodeUrl(trimmedContent);
-                newResults.decoded = trimmedContent; // URL本身也可以作为"解码"内容
+                newResults.decoded = trimmedContent; // URL itself can also serve as "decoded" content
                 newResults.contentType = 'url';
                 newResults.decodedType = 'URL';
             } else {
-                // 其他内容，按普通文本处理
+                // Other content, process as plain text
                 newResults.encoded = encodeUrl(trimmedContent);
                 newResults.decoded = decodeUrl(trimmedContent);
                 newResults.contentType = 'other';
-                newResults.decodedType = '普通文本';
+                newResults.decodedType = 'Plain Text';
             }
 
-            // 生成二维码 - 根据内容类型决定二维码内容
+            // Generate QR code - determine QR code content based on content type
             if (newResults.contentType === 'url_encoded' || newResults.contentType === 'base64' || newResults.contentType === 'hex') {
-                // 如果是各种编码的URL，使用解码后的内容生成二维码
+                // If it's various encoded URLs, use decoded content to generate QR code
                 newResults.qrcode = newResults.decoded;
             } else if (newResults.contentType === 'url') {
-                // 如果是普通URL，使用原始内容生成二维码
+                // If it's regular URL, use original content to generate QR code
                 newResults.qrcode = trimmedContent;
             } else {
-                // 其他情况使用原始内容
+                // Other cases use original content
                 newResults.qrcode = trimmedContent;
             }
 
@@ -236,11 +236,11 @@ export default function UrlTool({ content }) {
         } catch (err) {
             setError(err.message);
         }
-    }, [setResults, setError]); // 添加必要的依赖
+    }, [setResults, setError]); // Add necessary dependencies
 
-    // 防抖处理content变化
+    // Debounce handling for content changes
     useEffect(() => {
-        console.log('🎯 content变化监听:', {
+        console.log('🎯 Content change monitoring:', {
             content: content?.substring(0, 50) + '...',
             hasContent: !!content,
             lastProcessed: lastProcessedContentRef.current?.substring(0, 50) + '...',
@@ -248,67 +248,67 @@ export default function UrlTool({ content }) {
         });
 
         if (!content || content === lastProcessedContentRef.current) {
-            console.log('⚠️ content未变化或为空，跳过防抖处理');
+            console.log('⚠️ Content unchanged or empty, skipping debounce processing');
             return;
         }
 
-        console.log('🔍 防抖触发:', {content: content.substring(0, 50) + '...', timestamp: Date.now()});
+        console.log('🔍 Debounce triggered:', {content: content.substring(0, 50) + '...', timestamp: Date.now()});
 
         if (debounceTimerRef.current) {
-            console.log('🧹 清除旧定时器:', debounceTimerRef.current);
+            console.log('🧹 Clearing old timer:', debounceTimerRef.current);
             clearTimeout(debounceTimerRef.current);
         }
 
         debounceTimerRef.current = setTimeout(() => {
-            console.log('✅ 防抖执行content变化:', {
+            console.log('✅ Debounce executing content change:', {
                 content: content.substring(0, 50) + '...',
                 timestamp: Date.now()
             });
             processContent(content);
             
-            // 更新最后处理的内容
+            // Update last processed content
             lastProcessedContentRef.current = content;
-        }, 300); // 减少延迟以获得更快速的响应
+        }, 300); // Reduce delay for faster response
 
-        console.log('⏰ 设置新定时器:', debounceTimerRef.current, '延迟: 300ms');
+        console.log('⏰ Setting new timer:', debounceTimerRef.current, 'delay: 300ms');
 
         return () => {
             if (debounceTimerRef.current) {
-                console.log('🧹 组件卸载时清除定时器:', debounceTimerRef.current);
+                console.log('🧹 Clearing timer on component unmount:', debounceTimerRef.current);
                 clearTimeout(debounceTimerRef.current);
             }
         };
-    }, [content, processContent]); // 包含所有必要的依赖
+    }, [content, processContent]); // Include all necessary dependencies
 
-    // 初始处理
+    // Initial processing
     useEffect(() => {
         if (content && content !== lastProcessedContentRef.current) {
             processContent(content);
             lastProcessedContentRef.current = content;
         }
-    }, [content, processContent]); // 包含所有必要的依赖
+    }, [content, processContent]); // Include all necessary dependencies
 
     return (
         <div>
             <div className="w-full border rounded p-4 space-y-4">
-                <h3 className="text-lg font-bold">编码解码工具</h3>
+                <h3 className="text-lg font-bold">Encoding/Decoding Tool</h3>
                 
-                {/* 错误提示 */}
+                {/* Error notification */}
                 {error && (
                     <div className="p-3 bg-red-100 text-red-800 rounded text-sm">
-                        <strong>处理错误：</strong> {error}
+                        <strong>Processing error:</strong> {error}
                     </div>
                 )}
 
-                {/* 根据内容类型显示编码/解码结果 */}
+                {/* Display encoding/decoding results based on content type */}
                 {(results.contentType === 'url_encoded' || results.contentType === 'base64' || results.contentType === 'hex') && (
-                    // 如果是编码内容，显示解码结果
+                    // If it's encoded content, display decoding results
                     <div className="space-y-4">
                         <div className="border rounded p-3 bg-yellow-50">
                             <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-medium text-sm text-gray-700">📤 {results.decodedType}解码结果</h4>
+                                <h4 className="font-medium text-sm text-gray-700">📤 {results.decodedType} Decoding Results</h4>
                                 <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
-                                    🔐 已解码
+                                    🔐 Decoded
                                 </span>
                             </div>
                             {results.decoded ? (
@@ -317,16 +317,16 @@ export default function UrlTool({ content }) {
                                 </div>
                             ) : (
                                 <div className="text-xs text-gray-500 italic">
-                                    解码失败或输入不是编码格式
+                                    Decoding failed or input is not encoded format
                                 </div>
                             )}
                         </div>
                         
                         <div className="border rounded p-3 bg-green-50">
                             <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-medium text-sm text-gray-700">📥 {results.decodedType}编码对比</h4>
+                                <h4 className="font-medium text-sm text-gray-700">📥 {results.decodedType} Encoding Comparison</h4>
                                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                    🔧 对比
+                                    🔧 Comparison
                                 </span>
                             </div>
                             {results.encoded ? (
@@ -335,7 +335,7 @@ export default function UrlTool({ content }) {
                                 </div>
                             ) : (
                                 <div className="text-xs text-gray-500 italic">
-                                    编码失败
+                                    Encoding failed
                                 </div>
                             )}
                         </div>
@@ -343,11 +343,11 @@ export default function UrlTool({ content }) {
                 )}
                 
                 {results.contentType === 'url' && (
-                    // 如果是普通URL，显示编码结果
+                    // If it's regular URL, display encoding results
                     <div className="space-y-4">
                         <div className="border rounded p-3 bg-green-50">
                             <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-medium text-sm text-gray-700">📥 URL编码</h4>
+                                <h4 className="font-medium text-sm text-gray-700">📥 URL Encoding</h4>
                                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
                                     🌐 URL
                                 </span>
@@ -358,7 +358,7 @@ export default function UrlTool({ content }) {
                                 </div>
                             ) : (
                                 <div className="text-xs text-gray-500 italic">
-                                    URL已进行编码
+                                    URL has been encoded
                                 </div>
                             )}
                         </div>
@@ -366,13 +366,13 @@ export default function UrlTool({ content }) {
                 )}
 
                 {results.contentType === 'other' && (
-                    // 如果是其他内容，显示编码结果
+                    // If it's other content, display encoding results
                     <div className="space-y-4">
                         <div className="border rounded p-3 bg-green-50">
                             <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-medium text-sm text-gray-700">📥 文本编码</h4>
+                                <h4 className="font-medium text-sm text-gray-700">📥 Text Encoding</h4>
                                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                    📝 文本
+                                    📝 Text
                                 </span>
                             </div>
                             {results.encoded ? (
@@ -381,19 +381,19 @@ export default function UrlTool({ content }) {
                                 </div>
                             ) : (
                                 <div className="text-xs text-gray-500 italic">
-                                    内容已进行URL编码
+                                    Content has been URL encoded
                                 </div>
                             )}
                         </div>
                     </div>
                 )}
 
-                {/* 二维码区域 - 总是显示，自动基于合适的内容生成 */}
+                {/* QR code area - always displayed, automatically generated based on appropriate content */}
                 <div className="space-y-4">
                     <div className="flex flex-wrap items-center gap-4">
                         <div>
                             <label className="text-sm font-medium text-gray-700 mr-2">
-                                二维码尺寸:
+                                QR Code Size:
                             </label>
                             <select 
                                 value={qrSize}
@@ -409,10 +409,10 @@ export default function UrlTool({ content }) {
                         </div>
                         
                         <button
-                            onClick={() => processContent(content)} // 重新处理以更新二维码
+                            onClick={() => processContent(content)} // Re-process to update QR code
                             className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-sm"
                         >
-                            🔄 重新生成
+                            🔄 Regenerate
                         </button>
                     </div>
 
@@ -430,38 +430,38 @@ export default function UrlTool({ content }) {
                                     />
                                 </div>
                                 <div className="mt-3 text-sm text-gray-600">
-                                    📱 扫描二维码访问内容
+                                    📱 Scan QR code to access content
                                 </div>
                                 <div className="mt-1 text-xs text-gray-500 bg-gray-50 p-2 rounded break-all overflow-x-auto max-w-full">
-                                    二维码内容: {results.qrcode}
+                                    QR code content: {results.qrcode}
                                 </div>
-                                {/* 根据内容类型显示额外信息 */}
+                                {/* Display additional information based on content type */}
                                 {(results.contentType === 'url_encoded' || results.contentType === 'base64' || results.contentType === 'hex') && (
                                     <div className="mt-2 text-xs text-gray-500 bg-yellow-50 p-2 rounded break-all overflow-x-auto max-w-full">
-                                        原始编码内容: {results.original}
+                                        Original encoded content: {results.original}
                                     </div>
                                 )}
                                 {results.contentType === 'url' && (
                                     <div className="mt-2 text-xs text-gray-500 bg-blue-50 p-2 rounded break-all overflow-x-auto max-w-full">
-                                        原始URL: {results.original}
+                                        Original URL: {results.original}
                                     </div>
                                 )}
                             </div>
                         ) : (
                             <div className="text-center text-gray-500 py-8 w-full">
                                 <div className="text-4xl mb-2">📱</div>
-                                <div className="text-sm">请输入内容生成二维码</div>
+                                <div className="text-sm">Please enter content to generate QR code</div>
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* 空状态提示 */}
+                {/* Empty state notification */}
                 {!content && (
                     <div className="text-center text-gray-500 py-8">
                         <div className="text-4xl mb-2">🔗</div>
-                        <div>请输入URL或文本内容开始使用工具</div>
-                        <div className="text-sm mt-1">支持URL编码解码和二维码生成</div>
+                        <div>Please enter URL or text content to start using the tool</div>
+                        <div className="text-sm mt-1">Supports URL encoding/decoding and QR code generation</div>
                     </div>
                 )}
             </div>

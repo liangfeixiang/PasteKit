@@ -1,15 +1,15 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 
-// 检查是否为有效的域名格式
+// Check if it's a valid domain format
 const isValidDomain = (domain) => {
     const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
     return domainRegex.test(domain.trim());
 };
 
-// DNS查询函数 - 支持IPv4、IPv6和CNAME记录
+// DNS query function - supports IPv4, IPv6 and CNAME records
 const queryDNS = async (domain) => {
     try {
-        // 并行查询A记录(IPv4)、AAAA记录(IPv6)和CNAME记录
+        // Parallel query for A records (IPv4), AAAA records (IPv6) and CNAME records
         const [aResponse, aaaaResponse, cnameResponse] = await Promise.all([
             fetch(`https://dns.alidns.com/resolve?name=${encodeURIComponent(domain)}&type=A`),
             fetch(`https://dns.alidns.com/resolve?name=${encodeURIComponent(domain)}&type=AAAA`),
@@ -19,37 +19,37 @@ const queryDNS = async (domain) => {
         let allRecords = [];
         let errors = [];
 
-        // 处理A记录响应
+        // Process A record response
         if (aResponse.ok) {
             const aData = await aResponse.json();
             if (aData.Answer) {
                 allRecords = [...allRecords, ...aData.Answer];
             }
         } else {
-            errors.push(`A记录查询失败: ${aResponse.status}`);
+            errors.push(`A record query failed: ${aResponse.status}`);
         }
 
-        // 处理AAAA记录响应
+        // Process AAAA record response
         if (aaaaResponse.ok) {
             const aaaaData = await aaaaResponse.json();
             if (aaaaData.Answer) {
                 allRecords = [...allRecords, ...aaaaData.Answer];
             }
         } else {
-            errors.push(`AAAA记录查询失败: ${aaaaResponse.status}`);
+            errors.push(`AAAA record query failed: ${aaaaResponse.status}`);
         }
 
-        // 处理CNAME记录响应
+        // Process CNAME record response
         if (cnameResponse.ok) {
             const cnameData = await cnameResponse.json();
             if (cnameData.Answer) {
                 allRecords = [...allRecords, ...cnameData.Answer];
             }
         } else {
-            errors.push(`CNAME记录查询失败: ${cnameResponse.status}`);
+            errors.push(`CNAME record query failed: ${cnameResponse.status}`);
         }
 
-        // 如果有记录返回成功结果
+        // Return successful result if there are records
         if (allRecords.length > 0) {
             return {
                 Answer: allRecords,
@@ -57,15 +57,15 @@ const queryDNS = async (domain) => {
             };
         }
 
-        // 如果都没有记录但请求成功，返回无记录
+        // If no records but request succeeded, return no records
         if (errors.length === 0) {
             return {
                 Answer: null,
-                error: '无解析记录'
+                error: 'No resolution records'
             };
         }
 
-        // 如果都有错误，返回第一个错误
+        // If all have errors, return the first error
         return {
             Answer: null,
             error: errors.join('; ')
@@ -74,35 +74,35 @@ const queryDNS = async (domain) => {
     } catch (error) {
         return {
             Answer: null,
-            error: 'DNS查询失败: ' + error.message
+            error: 'DNS query failed: ' + error.message
         };
     }
 };
 
-// 解析DNS响应数据
+// Parse DNS response data
 const parseDNSResponse = (data) => {
     if (!data || !data.Answer) {
         return {
             records: [],
-            error: '无解析记录'
+            error: 'No resolution records'
         };
     }
 
     const records = data.Answer.map(item => {
-        // 根据记录类型设置标签和背景色
+        // Set label and background color based on record type
         let typeLabel = '';
         let bgColor = '';
         
         switch (item.type) {
-            case 1: // A记录
+            case 1: // A record
                 typeLabel = 'IPv4';
                 bgColor = 'bg-green-100 text-green-800';
                 break;
-            case 28: // AAAA记录
+            case 28: // AAAA record
                 typeLabel = 'IPv6';
                 bgColor = 'bg-blue-100 text-blue-800';
                 break;
-            case 5: // CNAME记录
+            case 5: // CNAME record
                 typeLabel = 'CNAME';
                 bgColor = 'bg-purple-100 text-purple-800';
                 break;
@@ -121,9 +121,9 @@ const parseDNSResponse = (data) => {
         };
     });
 
-    // 按照优先级排序：CNAME(5) > IPv4(1) > IPv6(28)
+    // Sort by priority: CNAME(5) > IPv4(1) > IPv6(28)
     const sortedRecords = [...records].sort((a, b) => {
-        const priority = { 5: 1, 1: 2, 28: 3 }; // CNAME最高优先级，IPv4次之，IPv6最低
+        const priority = { 5: 1, 1: 2, 28: 3 }; // CNAME highest priority, IPv4 second, IPv6 lowest
         const priorityA = priority[a.type] || 999;
         const priorityB = priority[b.type] || 999;
         return priorityA - priorityB;
@@ -136,13 +136,13 @@ const parseDNSResponse = (data) => {
 };
 
 export default function DnsTool({ content }) {
-    console.log('🌐 DnsTool渲染:', {
+    console.log('🌐 DnsTool rendering:', {
         content: content?.substring(0, 50) + '...',
         hasContent: !!content,
         timestamp: Date.now()
     });
 
-    // 如果没有内容，不显示组件
+    // Don't display component if no content
     if (!content || content === undefined || content === null) {
         return null;
     }
@@ -156,11 +156,11 @@ export default function DnsTool({ content }) {
     const debounceTimerRef = useRef(null);
     const lastProcessedContentRef = useRef('');
 
-    console.log('🔄 DNS工具状态更新:', { hasError: !!results.error });
+    console.log('🔄 DNS tool state update:', { hasError: !!results.error });
 
-    // 处理域名查询的核心函数
+    // Core function to process domain query
     const processContent = useCallback(async (inputContent = content) => {
-        console.log('🚀 执行processContent:', {
+        console.log('🚀 Executing processContent:', {
             content: inputContent?.substring(0, 50) + '...',
             timestamp: Date.now()
         });
@@ -183,18 +183,18 @@ export default function DnsTool({ content }) {
                 return;
             }
 
-            // 验证域名格式
+            // Validate domain format
             if (!isValidDomain(trimmedContent)) {
                 setResults({
                     original: trimmedContent,
                     records: [],
                     isLoading: false,
-                    error: '请输入有效的域名格式'
+                    error: 'Please enter a valid domain format'
                 });
                 return;
             }
 
-            // 执行DNS查询
+            // Execute DNS query
             const dnsData = await queryDNS(trimmedContent);
             
             if (dnsData.error) {
@@ -207,7 +207,7 @@ export default function DnsTool({ content }) {
                 return;
             }
 
-            // 解析响应数据
+            // Parse response data
             const parsedData = parseDNSResponse(dnsData);
             
             setResults({
@@ -227,9 +227,9 @@ export default function DnsTool({ content }) {
         }
     }, []);
 
-    // 防抖处理content变化
+    // Debounce handling for content changes
     useEffect(() => {
-        console.log('🎯 content变化监听:', {
+        console.log('🎯 Content change monitoring:', {
             content: content?.substring(0, 50) + '...',
             hasContent: !!content,
             lastProcessed: lastProcessedContentRef.current?.substring(0, 50) + '...',
@@ -237,33 +237,33 @@ export default function DnsTool({ content }) {
         });
 
         if (!content || content === lastProcessedContentRef.current) {
-            console.log('⚠️ content未变化或为空，跳过防抖处理');
+            console.log('⚠️ Content unchanged or empty, skipping debounce processing');
             return;
         }
 
-        console.log('🔍 防抖触发:', {content: content.substring(0, 50) + '...', timestamp: Date.now()});
+        console.log('🔍 Debounce triggered:', {content: content.substring(0, 50) + '...', timestamp: Date.now()});
 
         if (debounceTimerRef.current) {
-            console.log('🧹 清除旧定时器:', debounceTimerRef.current);
+            console.log('🧹 Clearing old timer:', debounceTimerRef.current);
             clearTimeout(debounceTimerRef.current);
         }
 
         debounceTimerRef.current = setTimeout(() => {
-            console.log('✅ 防抖执行content变化:', {
+            console.log('✅ Debounce executing content change:', {
                 content: content.substring(0, 50) + '...',
                 timestamp: Date.now()
             });
             processContent(content);
             
-            // 更新最后处理的内容
+            // Update last processed content
             lastProcessedContentRef.current = content;
         }, 500);
 
-        console.log('⏰ 设置新定时器:', debounceTimerRef.current, '延迟: 500ms');
+        console.log('⏰ Setting new timer:', debounceTimerRef.current, 'delay: 500ms');
 
         return () => {
             if (debounceTimerRef.current) {
-                console.log('🧹 组件卸载时清除定时器:', debounceTimerRef.current);
+                console.log('🧹 Clearing timer on component unmount:', debounceTimerRef.current);
                 clearTimeout(debounceTimerRef.current);
             }
         };
@@ -281,30 +281,30 @@ export default function DnsTool({ content }) {
         <div>
             <div className="w-full border rounded p-4 space-y-4">
                 <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-bold">🌐 DNS解析工具</h3>
+                    <h3 className="text-lg font-bold">🌐 DNS Resolution Tool</h3>
                 </div>
                 
-                {/* 错误提示 */}
+                {/* Error notification */}
                 {results.error && (
                     <div className="p-3 bg-red-100 text-red-800 rounded text-sm">
-                        <strong>查询错误：</strong> {results.error}
+                        <strong>Query error:</strong> {results.error}
                     </div>
                 )}
 
-                {/* 加载状态 */}
+                {/* Loading state */}
                 {results.isLoading && (
                     <div className="flex items-center justify-center py-8">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mr-3"></div>
-                        <span className="text-gray-600">正在查询DNS记录...</span>
+                        <span className="text-gray-600">Querying DNS records...</span>
                     </div>
                 )}
 
-                {/* DNS解析结果 */}
+                {/* DNS resolution results */}
                 {!results.isLoading && results.records.length > 0 && (
                     <div className="space-y-4">
                         <div className="border rounded-lg p-4 bg-gradient-to-r from-blue-50 to-indigo-50">
                             <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-semibold text-gray-700">📋 DNS解析结果</h4>
+                                <h4 className="font-semibold text-gray-700">📋 DNS Resolution Results</h4>
                                 <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
                                     🌐 {results.original}
                                 </span>
@@ -314,9 +314,9 @@ export default function DnsTool({ content }) {
                                 <table className="w-full text-sm">
                                     <thead>
                                         <tr className="bg-gray-100">
-                                            <th className="text-left py-2 px-3 font-medium text-gray-700">记录类型</th>
+                                            <th className="text-left py-2 px-3 font-medium text-gray-700">Record Type</th>
                                             <th className="text-left py-2 px-3 font-medium text-gray-700">TTL</th>
-                                            <th className="text-left py-2 px-3 font-medium text-gray-700">解析地址</th>
+                                            <th className="text-left py-2 px-3 font-medium text-gray-700">Resolution Address</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -339,36 +339,36 @@ export default function DnsTool({ content }) {
                                 </table>
                             </div>
                             
-                            {/* 统计信息 */}
+                            {/* Statistics */}
                             <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
-                                <span>IPv4记录: {results.records.filter(r => r.type === 1).length} 条</span>
-                                <span>IPv6记录: {results.records.filter(r => r.type === 28).length} 条</span>
-                                <span>CNAME记录: {results.records.filter(r => r.type === 5).length} 条</span>
-                                <span>总计: {results.records.length} 条记录</span>
+                                <span>IPv4 records: {results.records.filter(r => r.type === 1).length}</span>
+                                <span>IPv6 records: {results.records.filter(r => r.type === 28).length}</span>
+                                <span>CNAME records: {results.records.filter(r => r.type === 5).length}</span>
+                                <span>Total: {results.records.length} records</span>
                             </div>
                             
                             <div className="mt-3 text-xs text-gray-500">
-                                共找到 {results.records.length} 条记录
+                                Found {results.records.length} records
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* 无效域名提示 */}
+                {/* Invalid domain notification */}
                 {!results.isLoading && results.records.length === 0 && !results.error && results.original && (
                     <div className="text-center text-gray-500 py-8">
                         <div className="text-4xl mb-2">🔍</div>
-                        <div>未找到域名 "{results.original}" 的DNS记录</div>
-                        <div className="text-sm mt-1">请检查域名拼写是否正确</div>
+                        <div>No DNS records found for domain "{results.original}"</div>
+                        <div className="text-sm mt-1">Please check if the domain spelling is correct</div>
                     </div>
                 )}
 
-                {/* 空状态提示 */}
+                {/* Empty state notification */}
                 {!content && (
                     <div className="text-center text-gray-500 py-8">
                         <div className="text-4xl mb-2">🌐</div>
-                        <div>请输入域名开始DNS解析</div>
-                        <div className="text-sm mt-1">例如: www.google.com 或 github.com</div>
+                        <div>Please enter a domain to start DNS resolution</div>
+                        <div className="text-sm mt-1">Example: www.google.com or github.com</div>
                     </div>
                 )}
             </div>

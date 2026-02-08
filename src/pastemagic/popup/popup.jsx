@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import ReactDOM from "react-dom/client";
 import {Textarea} from "@/components/ui/textarea.js";
+import { Github } from "lucide-react";
 import TimeTool from "@/pastemagic/component/timetool.jsx"
 import CroneTool from "@/pastemagic/component/cronetool.jsx"
 import JsonTool from "@/pastemagic/component/jsonTool.jsx"
@@ -9,18 +10,18 @@ import UrlTool from "@/pastemagic/component/urltool.jsx"
 import IpTool from "@/pastemagic/component/iptool.jsx"
 import DnsTool from "@/pastemagic/component/dnstool.jsx"
 
-// 格式检测函数
+// Format detection function
 const detectContentType = (content) => {
     const trimmedContent = content?.trim() || '';
     
-    // 检测IPv4地址格式
+    // Detect IPv4 address format
     const ipv4Pattern = /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
     if (ipv4Pattern.test(trimmedContent)) {
         return 'ip';
     }
     
-    // 检测IPv6地址格式（更严格的检测）
-    // 要求必须包含至少一个冒号，且不能是纯数字
+    // Detect IPv6 address format (more strict detection)
+    // Must contain at least one colon and cannot be pure numbers
     if (trimmedContent.includes(':') && !/^[\d\.]+$/.test(trimmedContent)) {
         const ipv6FullRegex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
         const ipv6CompressedRegex = /^(([0-9a-fA-F]{1,4}:){1,7}:|:(([0-9a-fA-F]{1,4}:){1,7}|:)|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))$/;
@@ -29,7 +30,7 @@ const detectContentType = (content) => {
         }
     }
     
-    // 检测IPv4 CIDR格式 (如 192.168.1.0/24) - 要求必须包含斜杠
+    // Detect IPv4 CIDR format (e.g. 192.168.1.0/24) - Must contain slash
     if (trimmedContent.includes('/')) {
         const cidrPattern = /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/([1-9]|[12][0-9]|3[0-2])$/;
         if (cidrPattern.test(trimmedContent)) {
@@ -37,7 +38,7 @@ const detectContentType = (content) => {
         }
     }
     
-    // 检测IPv6 CIDR格式 (如 2001:db8::/32) - 要求必须包含冒号和斜杠
+    // Detect IPv6 CIDR format (e.g. 2001:db8::/32) - Must contain colon and slash
     if (trimmedContent.includes(':') && trimmedContent.includes('/')) {
         const ipv6CidrPattern = /^([0-9a-fA-F]{1,4}(:[0-9a-fA-F]{1,4}){0,7}|:|::)(\/(1[0-2][0-8]|[1-9][0-9]|[0-9]))$/;
         if (ipv6CidrPattern.test(trimmedContent)) {
@@ -45,10 +46,10 @@ const detectContentType = (content) => {
         }
     }
     
-    // 检测Cron表达式格式
-    // 支持标准5字段: 0 0 * * *
-    // 支持6字段(含秒): 0 0 0 * * *
-    // 支持Quartz格式(含年份): 0 0 0 * * ? 2024
+    // Detect Cron expression format
+    // Support standard 5 fields: 0 0 * * *
+    // Support 6 fields (with seconds): 0 0 0 * * *
+    // Support Quartz format (with year): 0 0 0 * * ? 2024
     const cronPatterns = [
         /^([\d\*\/,\-\?]+\s+){4}[\d\*\/,\-\?]+$/,  // 5字段标准格式
         /^([\d\*\/,\-\?]+\s+){5}[\d\*\/,\-\?]+$/,  // 6字段格式(含秒)
@@ -59,62 +60,62 @@ const detectContentType = (content) => {
         return 'cron';
     }
     
-    // 检测时间戳格式 (10位或13位数字)
+    // Detect timestamp format (10 or 13 digit numbers)
     const timestampPattern = /^\d{10}$|^\d{13}$/;
     if (timestampPattern.test(trimmedContent)) {
         return 'timestamp';
     }
     
-    // 检测日期时间格式 (YYYY-MM-DD HH:mm:ss 或类似格式)
+    // Detect date time format (YYYY-MM-DD HH:mm:ss or similar format)
     const dateTimePattern = /^\d{4}-\d{2}-\d{2}(\s+\d{2}:\d{2}:\d{2})?$/;
     if (dateTimePattern.test(trimmedContent)) {
         return 'datetime';
     }
     
-    // 检测JSON格式 - 支持不完整的JSON片段
-    // 排除纯数字的情况
+    // Detect JSON format - Support incomplete JSON fragments
+    // Exclude pure number cases
     const numberPattern = /^\d+$/;
     if (numberPattern.test(trimmedContent)) {
-        // 纯数字不认为是JSON
+        // Pure numbers are not considered JSON
     } else {
-        // 检查是否包含明显的JSON特征
+        // Check if it contains obvious JSON characteristics
         const jsonIndicators = [
-            /^\s*\{/,           // 以 { 开头
-            /\}\s*$/,           // 以 } 结尾
-            /"[^"]*":/,        // 包含键值对格式
-            /\[\s*\]/,         // 空数组
-            /\{\s*\}/          // 空对象
+            /^\s*\{/,           // Starts with {
+            /\}\s*$/,           // Ends with }
+            /"[^"]*":/,        // Contains key-value pair format
+            /\[\s*\]/,         // Empty array
+            /\{\s*\}/          // Empty object
         ];
         
         const hasJsonIndicators = jsonIndicators.some(pattern => pattern.test(trimmedContent));
         
         if (hasJsonIndicators) {
-            // 尝试严格解析
+            // Try strict parsing
             try {
                 JSON.parse(trimmedContent);
                 return 'json';
             } catch (e) {
-                // 严格解析失败，但包含JSON特征，仍然标记为json让JsonTool处理
-                // JsonTool组件会负责显示错误信息和修复建议
+                // Strict parsing failed, but contains JSON characteristics, still mark as json for JsonTool to handle
+                // JsonTool component will be responsible for displaying error messages and repair suggestions
                 return 'json';
             }
         }
     }
     
-    // 完全不是JSON格式
+    // Completely not JSON format
     try {
         JSON.parse(trimmedContent);
         return 'json';
     } catch (e) {
-        // 不是有效JSON
+        // Not valid JSON
     }
     
-    // 检测URL格式 - http开头就认为是URL
+    // Detect URL format - Consider as URL if starts with http
     if (trimmedContent.toLowerCase().startsWith('http')) {
         return 'url';
     }
     
-    // 检测URL编码特征 (%xx 格式)并验证解码后是否包含http
+    // Detect URL encoding characteristics (%xx format) and verify if decoded content contains http
     const urlEncodedPattern = /%[0-9A-Fa-f]{2}/;
     if (urlEncodedPattern.test(trimmedContent)) {
         try {
@@ -123,17 +124,17 @@ const detectContentType = (content) => {
                 return 'url';
             }
         } catch (e) {
-            // 解码失败
+            // Decoding failed
         }
     }
     
-    // 检测域名格式
+    // Detect domain format
     const domainPattern = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
     if (domainPattern.test(trimmedContent)) {
         return 'domain';
     }
     
-    // 默认返回encode (其他格式)
+    // Default return encode (other formats)
     return 'encode';
 };
 
@@ -143,9 +144,9 @@ export default function PopUp() {
     const [content, setContent] = useState('');
     const contentType = detectContentType(content);
 
-    // 根据内容类型渲染相应组件
+    // Render corresponding components based on content type
     const renderToolComponent = () => {
-        // 当内容为空时，显示默认本机IP
+        // When content is empty, display default local IP
         if (!content || content.trim() === '') {
             return <IpTool content={content} showMyIp={true} />;
         }
@@ -155,7 +156,7 @@ export default function PopUp() {
             case 'ipv6':
             case 'cidr':
             case 'ipv6cidr':
-                // 当输入IP时，同时展示本机IP和详细查询结果
+                // When IP is entered, display both local IP and detailed query results
                 return <IpTool content={content} showMyIp={true} />;
             case 'domain':
                 return <DnsTool content={content} />;
@@ -178,7 +179,7 @@ export default function PopUp() {
         <div className="w-[400px] h-[600px] border rounded flex flex-col">
             <Textarea
                 className='min-h-[100px]'
-                placeholder="请输入内容...插件会根据内容智能进行解析"
+                placeholder="Please enter content... The plugin will intelligently parse based on content"
                 id="message-2"
                 value={content}
                 onChange={(e) => {
@@ -186,30 +187,43 @@ export default function PopUp() {
                 }}
             />
             
-            {/* 显示当前检测到的内容类型 */}
+            {/* Display currently detected content type */}
             <div className="px-3 py-2 text-xs text-gray-500 bg-gray-50 border-b">
-                检测到格式: {
+                Detected format: {
                     !content || content.trim() === '' ? 
-                    '默认IP' : 
+                    'Default IP' : 
                     {
-                        'ip': 'IPv4地址',
-                        'ipv6': 'IPv6地址',
-                        'cidr': 'IPv4子网',
-                        'ipv6cidr': 'IPv6子网',
-                        'domain': '域名',
-                        'cron': 'Cron表达式',
-                        'timestamp': '时间戳',
-                        'datetime': '日期时间',
+                        'ip': 'IPv4 Address',
+                        'ipv6': 'IPv6 Address',
+                        'cidr': 'IPv4 Subnet',
+                        'ipv6cidr': 'IPv6 Subnet',
+                        'domain': 'Domain',
+                        'cron': 'Cron Expression',
+                        'timestamp': 'Timestamp',
+                        'datetime': 'Date Time',
                         'json': 'JSON',
                         'url': 'URL',
-                        'encode': '编码格式'
+                        'encode': 'Encoding Format'
                     }[contentType]
                 }
             </div>
 
-            {/* 动态渲染工具组件 */}
+            {/* Dynamically render tool components */}
             <div className="flex-1 overflow-auto">
                 {renderToolComponent()}
+            </div>
+            
+            {/* Bottom GitHub icon */}
+            <div className="p-3 border-t flex justify-center bg-gray-50">
+                <a 
+                    href="https://github.com/liangfeixiang/PasteMagic" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-gray-500 hover:text-gray-700 transition-colors"
+                    title="Visit GitHub Repository"
+                >
+                    <Github className="w-5 h-5" />
+                </a>
             </div>
         </div>
     );
