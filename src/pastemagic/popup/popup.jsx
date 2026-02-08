@@ -219,10 +219,10 @@ export default function PopUp() {
                     href="https://github.com/liangfeixiang/PasteMagic" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-gray-500 hover:text-gray-700 transition-colors"
+                    className="bg-gray-900 hover:bg-gray-800 p-2 rounded-full transition-colors duration-200"
                     title="Visit GitHub Repository"
                 >
-                    <Github className="w-5 h-5" />
+                    <Github className="w-5 h-5 text-white" />
                 </a>
             </div>
         </div>
