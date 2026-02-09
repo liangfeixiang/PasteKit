@@ -322,23 +322,6 @@ export default function UrlTool({ content }) {
                             )}
                         </div>
                         
-                        <div className="border rounded p-3 bg-green-50">
-                            <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-medium text-sm text-gray-700">📥 {results.decodedType} Encoding Comparison</h4>
-                                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                    🔧 Comparison
-                                </span>
-                            </div>
-                            {results.encoded ? (
-                                <div className="text-xs font-mono bg-green-100 px-2 py-1 rounded break-all">
-                                    {results.encoded}
-                                </div>
-                            ) : (
-                                <div className="text-xs text-gray-500 italic">
-                                    Encoding failed
-                                </div>
-                            )}
-                        </div>
                     </div>
                 )}
                 
@@ -435,17 +418,6 @@ export default function UrlTool({ content }) {
                                 <div className="mt-1 text-xs text-gray-500 bg-gray-50 p-2 rounded break-all overflow-x-auto max-w-full">
                                     QR code content: {results.qrcode}
                                 </div>
-                                {/* Display additional information based on content type */}
-                                {(results.contentType === 'url_encoded' || results.contentType === 'base64' || results.contentType === 'hex') && (
-                                    <div className="mt-2 text-xs text-gray-500 bg-yellow-50 p-2 rounded break-all overflow-x-auto max-w-full">
-                                        Original encoded content: {results.original}
-                                    </div>
-                                )}
-                                {results.contentType === 'url' && (
-                                    <div className="mt-2 text-xs text-gray-500 bg-blue-50 p-2 rounded break-all overflow-x-auto max-w-full">
-                                        Original URL: {results.original}
-                                    </div>
-                                )}
                             </div>
                         ) : (
                             <div className="text-center text-gray-500 py-8 w-full">

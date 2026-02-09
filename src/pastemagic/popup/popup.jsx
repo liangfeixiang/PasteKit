@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import ReactDOM from "react-dom/client";
-import {Textarea} from "@/components/ui/textarea.js";
+import {Textarea} from "@/components/ui/textarea";
 import { Github } from "lucide-react";
-import TimeTool from "@/pastemagic/component/timetool.jsx"
-import CroneTool from "@/pastemagic/component/cronetool.jsx"
-import JsonTool from "@/pastemagic/component/jsonTool.jsx"
-import EncodeTool from "@/pastemagic/component/encodetool.jsx"
-import UrlTool from "@/pastemagic/component/urltool.jsx"
-import IpTool from "@/pastemagic/component/iptool.jsx"
-import DnsTool from "@/pastemagic/component/dnstool.jsx"
+import TimeTool from "@/pastemagic/component/timetool"
+import CroneTool from "@/pastemagic/component/cronetool"
+import JsonTool from "@/pastemagic/component/jsontool"
+import EncodeTool from "@/pastemagic/component/encodetool"
+import UrlTool from "@/pastemagic/component/urltool"
+import IpTool from "@/pastemagic/component/iptool"
+import DnsTool from "@/pastemagic/component/dnstool"
+import WorldClock from "@/pastemagic/component/worldclock"
 
 // Format detection function
 const detectContentType = (content) => {
@@ -176,54 +177,66 @@ export default function PopUp() {
     };
 
     return (
-        <div className="w-[400px] h-[600px] border rounded flex flex-col">
-            <Textarea
-                className='min-h-[100px]'
-                placeholder="Please enter content... The plugin will intelligently parse based on content"
-                id="message-2"
-                value={content}
-                onChange={(e) => {
-                   setContent(e.target.value)
-                }}
-            />
+        <div className="w-[400px] h-screen border rounded flex flex-col">
+            {/* Top - World Clock (fixed height) */}
+            <div className="shrink-0 border-b">
+                <WorldClock />
+            </div>
             
-            {/* Display currently detected content type */}
-            <div className="px-3 py-2 text-xs text-gray-500 bg-gray-50 border-b">
-                Detected format: {
-                    !content || content.trim() === '' ? 
-                    'Default IP' : 
-                    {
-                        'ip': 'IPv4 Address',
-                        'ipv6': 'IPv6 Address',
-                        'cidr': 'IPv4 Subnet',
-                        'ipv6cidr': 'IPv6 Subnet',
-                        'domain': 'Domain',
-                        'cron': 'Cron Expression',
-                        'timestamp': 'Timestamp',
-                        'datetime': 'Date Time',
-                        'json': 'JSON',
-                        'url': 'URL',
-                        'encode': 'Encoding Format'
-                    }[contentType]
-                }
+            {/* Middle - Content area (fixed height) */}
+            <div className="shrink-0">
+                <Textarea
+                    className='min-h-[100px]'
+                    placeholder="Please enter content... The plugin will intelligently parse based on content"
+                    id="message-2"
+                    value={content}
+                    onChange={(e) => {
+                       setContent(e.target.value)
+                    }}
+                />
+                
+                {/* Display currently detected content type */}
+                <div className="px-3 py-2 text-xs text-gray-500 bg-gray-50 border-b">
+                    Detected format: {
+                        !content || content.trim() === '' ? 
+                        'Default IP' : 
+                        {
+                            'ip': 'IPv4 Address',
+                            'ipv6': 'IPv6 Address',
+                            'cidr': 'IPv4 Subnet',
+                            'ipv6cidr': 'IPv6 Subnet',
+                            'domain': 'Domain',
+                            'cron': 'Cron Expression',
+                            'timestamp': 'Timestamp',
+                            'datetime': 'Date Time',
+                            'json': 'JSON',
+                            'url': 'URL',
+                            'encode': 'Encoding Format'
+                        }[contentType]
+                    }
+                </div>
             </div>
 
-            {/* Dynamically render tool components */}
-            <div className="flex-1 overflow-auto">
-                {renderToolComponent()}
-            </div>
-            
-            {/* Bottom GitHub icon */}
-            <div className="p-3 border-t flex justify-center bg-gray-50">
-                <a 
-                    href="https://github.com/liangfeixiang/PasteMagic" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="bg-gray-900 hover:bg-gray-800 p-2 rounded-full transition-colors duration-200"
-                    title="Visit GitHub Repository"
-                >
-                    <Github className="w-5 h-5 text-white" />
-                </a>
+            {/* Bottom - Tool components area (flexible height with scroll) */}
+            <div className="flex-1 flex flex-col min-h-0">
+                <div className="flex-1 min-h-0 overflow-hidden">
+                    <div className="h-full overflow-y-auto p-3">
+                        {renderToolComponent()}
+                    </div>
+                </div>
+                
+                {/* Bottom GitHub icon */}
+                <div className="shrink-0 p-3 border-t flex justify-center bg-gray-50">
+                    <a 
+                        href="https://github.com/liangfeixiang/PasteMagic" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="bg-gray-900 hover:bg-gray-800 p-2 rounded-full transition-colors duration-200"
+                        title="Visit GitHub Repository"
+                    >
+                        <Github className="w-5 h-5 text-white" />
+                    </a>
+                </div>
             </div>
         </div>
     );
