@@ -510,7 +510,7 @@ export default function EncodeTool({ content }) {
                 <div className="text-center text-gray-500 py-8">
                     <div className="text-4xl mb-2">🔧</div>
                     <div>Enter content to view encoding/decoding results</div>
-                    <div className="text-sm mt-1">Supports multiple encoding formats and QR code generation</div>
+                    <div className="text-sm mt-1">Supports multiple encoding formats, encryption/decryption, and QR code generation</div>
                 </div>
             )}
 

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配置管理错误修复测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-6">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🔧 配置管理错误修复测试</h1>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">错误修复验证</h2>
+            
+            <div class="space-y-4">
+                <div class="p-4 bg-green-50 rounded-lg">
+                    <h3 class="font-medium text-green-800">✅ 已修复的问题</h3>
+                    <ul class="mt-2 text-green-700 text-sm space-y-1">
+                        <li>• 添加了对 config.algorithm 的空值检查</li>
+                        <li>• 使用可选链操作符 (?.) 防止 undefined 错误</li>
+                        <li>• 为分割操作添加默认值回退</li>
+                        <li>• 统一了新旧配置格式的兼容性处理</li>
+                    </ul>
+                </div>
+                
+                <div class="p-4 bg-blue-50 rounded-lg">
+                    <h3 class="font-medium text-blue-800">📋 测试用例</h3>
+                    <div class="mt-2 space-y-2 text-sm">
+                        <div class="flex justify-between p-2 bg-white rounded">
+                            <span>正常配置:</span>
+                            <span class="font-mono text-blue-600">AES/CBC/PKCS7</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-white rounded">
+                            <span>缺少algorithm:</span>
+                            <span class="font-mono text-orange-600">undefined</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-white rounded">
+                            <span>新格式配置:</span>
+                            <span class="font-mono text-green-600">algorithmType: AES</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center">
+            <button onclick="runTests()" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 mr-4">
+                🧪 运行测试
+            </button>
+            <button onclick="clearConsole()" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+                🧹 清除日志
+            </button>
+        </div>
+        
+        <div class="mt-6 bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
+            <div id="console-output" class="h-64 overflow-y-auto">
+                > 控制台输出将显示在这里...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function log(message) {
+            const consoleOutput = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            consoleOutput.innerHTML += `[${timestamp}] ${message}\n`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearConsole() {
+            document.getElementById('console-output').innerHTML = '> 控制台已清空...\n';
+        }
+        
+        function runTests() {
+            clearConsole();
+            log('🧪 开始运行配置管理错误修复测试...');
+            
+            // 测试用例
+            const testCases = [
+                {
+                    name: '正常配置',
+                    config: { 
+                        name: '测试配置1', 
+                        algorithm: 'AES/CBC/PKCS7',
+                        algorithmType: 'AES',
+                        mode: 'CBC',
+                        padding: 'PKCS7'
+                    }
+                },
+                {
+                    name: '缺少algorithm字段',
+                    config: { 
+                        name: '测试配置2',
+                        algorithmType: 'SM4',
+                        mode: 'ECB',
+                        padding: 'NoPadding'
+                    }
+                },
+                {
+                    name: 'RSA配置',
+                    config: { 
+                        name: 'RSA配置',
+                        algorithm: 'RSA',
+                        algorithmType: 'RSA'
+                    }
+                },
+                {
+                    name: '完全缺失配置',
+                    config: { 
+                        name: '空配置'
+                    }
+                }
+            ];
+            
+            testCases.forEach((testCase, index) => {
+                log(`\n--- 测试 ${index + 1}: ${testCase.name} ---`);
+                
+                try {
+                    // 模拟表格显示逻辑
+                    const algorithmDisplay = testCase.config.algorithmType || testCase.config.algorithm?.split('/')[0] || 'AES';
+                    log(`算法类型显示: ${algorithmDisplay}`);
+                    
+                    // 模拟模式/填充显示逻辑
+                    if (testCase.config.algorithmType === 'RSA' || testCase.config.algorithm?.startsWith('RSA')) {
+                        log('模式/填充: N/A (RSA算法)');
+                    } else {
+                        const mode = testCase.config.mode || testCase.config.algorithm?.split('/')[1] || 'CBC';
+                        const padding = testCase.config.padding || testCase.config.algorithm?.split('/')[2] || 'PKCS5Padding';
+                        log(`模式/填充: ${mode} / ${padding}`);
+                    }
+                    
+                    log('✅ 测试通过');
+                } catch (error) {
+                    log(`❌ 测试失败: ${error.message}`);
+                }
+            });
+            
+            log('\n🎉 所有测试完成!');
+        }
+        
+        // 页面加载完成后自动运行一次测试
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(runTests, 1000);
+        });
+    </script>
+</body>
+</html>

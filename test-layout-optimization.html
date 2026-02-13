@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>布局优化测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        .sidebar { width: 256px; }
+        .main-content { flex: 1; }
+    </style>
+</head>
+<body>
+    <div class="flex h-screen bg-gray-50">
+        <!-- 左侧菜单栏 -->
+        <div class="sidebar bg-white border-r flex-shrink-0">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-bold">PasteMagic</h2>
+                <p class="text-sm text-gray-500">设置中心</p>
+            </div>
+            <nav class="p-2">
+                <div class="py-2 px-4 rounded hover:bg-gray-100 cursor-pointer bg-blue-50 text-blue-700">
+                    🔐 秘钥配置
+                </div>
+                <div class="py-2 px-4 rounded hover:bg-gray-100 cursor-pointer">
+                    🧪 加密测试
+                </div>
+                <div class="py-2 px-4 rounded hover:bg-gray-100 cursor-pointer">
+                    ℹ️ 关于
+                </div>
+            </nav>
+        </div>
+
+        <!-- 主内容区域 - 优化后的布局 -->
+        <div class="main-content overflow-auto">
+            <div class="p-6 h-full">
+                <div class="w-full">
+                    <!-- 配置管理区域 - 占据更多空间 -->
+                    <div class="mb-6 h-[calc(100vh-250px)]">
+                        <div class="bg-white rounded-lg border shadow-sm h-full p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold">🔐 秘钥配置管理</h3>
+                                <div class="flex gap-2">
+                                    <button class="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
+                                        ➕ 新建配置
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- 配置列表区域 -->
+                            <div class="space-y-3 h-[calc(100%-60px)]">
+                                <div class="border rounded-lg p-4 bg-gray-50">
+                                    <div class="font-medium">测试配置1</div>
+                                    <div class="text-sm text-gray-600 mt-1">
+                                        <span class="inline-block mr-3">算法: AES</span>
+                                        <span class="inline-block">编码: UTF-8</span>
+                                    </div>
+                                </div>
+                                <div class="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                                    <div class="font-medium">测试配置2</div>
+                                    <div class="text-sm text-gray-600 mt-1">
+                                        <span class="inline-block mr-3">算法: RSA</span>
+                                        <span class="inline-block">编码: BASE64</span>
+                                    </div>
+                                </div>
+                                <div class="text-center py-8 text-gray-500 border-2 border-dashed rounded-lg">
+                                    更多配置项...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 配置操作区域 -->
+                    <div class="bg-white rounded-lg border shadow-sm">
+                        <div class="p-6 border-b">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-semibold">💾 配置管理</h3>
+                                <div class="text-sm text-gray-500">
+                                    当前配置: 测试配置1
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                    💾 保存所有配置
+                                </button>
+                                <button class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">
+                                    📥 重新加载配置
+                                </button>
+                            </div>
+                            
+                            <div class="p-4 bg-gray-50 rounded-lg border">
+                                <h4 class="font-medium mb-3 text-lg">当前配置详情</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">配置名称:</span> 
+                                        <span class="font-medium">测试配置1</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">算法类型:</span> 
+                                        <span class="font-medium">AES</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">创建时间:</span> 
+                                        <span class="font-medium">2024-01-01 12:00:00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

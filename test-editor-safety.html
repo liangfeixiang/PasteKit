@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配置编辑器空值错误修复测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-6 bg-gray-50">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-center">🔧 配置编辑器空值错误修复</h1>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">错误分析与修复</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="p-4 bg-red-50 rounded-lg border border-red-200">
+                    <h3 class="font-medium text-red-800 mb-2">❌ 原始错误</h3>
+                    <div class="text-sm text-red-700">
+                        <p><strong>错误信息:</strong> Cannot read properties of undefined (reading 'value')</p>
+                        <p><strong>发生位置:</strong> ConfigEditor 组件第763行</p>
+                        <p><strong>原因:</strong> editedConfig.key 或 editedConfig.iv 为 undefined</p>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                    <h3 class="font-medium text-green-800 mb-2">✅ 修复方案</h3>
+                    <ul class="text-sm text-green-700 space-y-1">
+                        <li>• 配置对象标准化处理</li>
+                        <li>• 使用可选链操作符 (?.)</li>
+                        <li>• 添加默认值回退机制</li>
+                        <li>• 统一空值检查逻辑</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">测试用例演示</h2>
+            
+            <div class="space-y-4">
+                <div class="border rounded-lg p-4">
+                    <h3 class="font-medium mb-3">📋 测试配置类型</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-3 bg-blue-50 rounded">
+                            <h4 class="font-medium text-blue-800 mb-2">完整配置</h4>
+                            <pre class="text-xs bg-white p-2 rounded">{ name: "完整配置", key: { value: "test", encoding: ["HEX"] }, iv: { value: "iv", encoding: ["UTF8"] } }</pre>
+                        </div>
+                        
+                        <div class="p-3 bg-yellow-50 rounded">
+                            <h4 class="font-medium text-yellow-800 mb-2">缺失key/iv</h4>
+                            <pre class="text-xs bg-white p-2 rounded">{ name: "不完整配置" }</pre>
+                        </div>
+                        
+                        <div class="p-3 bg-purple-50 rounded">
+                            <h4 class="font-medium text-purple-800 mb-2">新格式配置</h4>
+                            <pre class="text-xs bg-white p-2 rounded">{ name: "新格式", key: { value: "", encoding: ["BASE64"] } }</pre>
+                        </div>
+                        
+                        <div class="p-3 bg-gray-50 rounded">
+                            <h4 class="font-medium text-gray-800 mb-2">空配置</h4>
+                            <pre class="text-xs bg-white p-2 rounded">{}</pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border rounded-lg p-4">
+                    <h3 class="font-medium mb-3">🔧 修复后的安全访问</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">密钥输入:</h4>
+                            <code class="bg-gray-100 p-2 rounded block">
+                                value={editedConfig.key?.value || ''}
+                            </code>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">编码选择:</h4>
+                            <code class="bg-gray-100 p-2 rounded block">
+                                value={editedConfig.key?.encoding?.[0] || 'HEX'}
+                            </code>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">验证逻辑:</h4>
+                            <code class="bg-gray-100 p-2 rounded block">
+                                if (!editedConfig.key?.value?.trim())
+                            </code>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">配置初始化:</h4>
+                            <code class="bg-gray-100 p-2 rounded block">
+                                key: config.key || { value: '', encoding: ['HEX'] }
+                            </code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center">
+            <button onclick="runSafetyTests()" class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 mr-4">
+                🧪 运行安全性测试
+            </button>
+            <button onclick="testEdgeCases()" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 mr-4">
+                🎯 测试边界情况
+            </button>
+            <button onclick="clearLogs()" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+                🧹 清除日志
+            </button>
+        </div>
+        
+        <div class="mt-6 bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm">
+            <div id="test-console" class="h-80 overflow-y-auto">
+                > 测试控制台输出将显示在这里...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const consoleEl = document.getElementById('test-console');
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'error' ? 'text-red-400' : type === 'success' ? 'text-green-400' : 'text-yellow-400';
+            consoleEl.innerHTML += `<div class="${colorClass}">[${timestamp}] ${message}</div>`;
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearLogs() {
+            document.getElementById('test-console').innerHTML = '> 控制台已清空...\n';
+        }
+        
+        function runSafetyTests() {
+            clearLogs();
+            log('🧪 开始运行配置编辑器安全性测试...', 'info');
+            
+            // 模拟各种配置情况
+            const testConfigs = [
+                {
+                    name: '完整配置',
+                    config: {
+                        name: '测试配置1',
+                        key: { value: 'a1b2c3d4', encoding: ['HEX'] },
+                        iv: { value: '01234567', encoding: ['UTF8'] },
+                        plainEncoding: ['UTF8'],
+                        cipherEncoding: ['BASE64']
+                    }
+                },
+                {
+                    name: '缺失key/iv字段',
+                    config: {
+                        name: '测试配置2'
+                        // 故意缺少 key 和 iv 字段
+                    }
+                },
+                {
+                    name: 'key/iv为null',
+                    config: {
+                        name: '测试配置3',
+                        key: null,
+                        iv: null
+                    }
+                },
+                {
+                    name: '空对象配置',
+                    config: {}
+                },
+                {
+                    name: '部分缺失配置',
+                    config: {
+                        name: '测试配置5',
+                        key: { value: 'test' } // 缺少 encoding
+                    }
+                }
+            ];
+            
+            testConfigs.forEach((testCase, index) => {
+                log(`\n--- 测试 ${index + 1}: ${testCase.name} ---`, 'info');
+                
+                try {
+                    // 模拟配置标准化过程
+                    const normalizedConfig = {
+                        ...testCase.config,
+                        key: testCase.config.key || { value: '', encoding: ['HEX'] },
+                        iv: testCase.config.iv || { value: '', encoding: ['UTF8'] },
+                        plainEncoding: testCase.config.plainEncoding || ['UTF8'],
+                        cipherEncoding: testCase.config.cipherEncoding || ['BASE64']
+                    };
+                    
+                    log(`✅ 配置标准化成功`, 'success');
+                    log(`   key.value: "${normalizedConfig.key?.value || 'undefined'}"`, 'info');
+                    log(`   key.encoding[0]: "${normalizedConfig.key?.encoding?.[0] || 'undefined'}"`, 'info');
+                    log(`   iv.value: "${normalizedConfig.iv?.value || 'undefined'}"`, 'info');
+                    
+                    // 测试安全访问
+                    const keyValue = normalizedConfig.key?.value || '';
+                    const keyEncoding = normalizedConfig.key?.encoding?.[0] || 'HEX';
+                    const ivValue = normalizedConfig.iv?.value || '';
+                    const plainEncoding = normalizedConfig.plainEncoding?.[0] || 'UTF8';
+                    
+                    log(`✅ 安全访问测试通过`, 'success');
+                    log(`   安全key值: "${keyValue}"`, 'info');
+                    log(`   安全编码: "${keyEncoding}"`, 'info');
+                    
+                } catch (error) {
+                    log(`❌ 测试失败: ${error.message}`, 'error');
+                }
+            });
+            
+            log('\n🎉 安全性测试完成!', 'success');
+        }
+        
+        function testEdgeCases() {
+            clearLogs();
+            log('🎯 开始边界情况测试...', 'info');
+            
+            const edgeCases = [
+                {
+                    desc: 'undefined配置',
+                    config: undefined
+                },
+                {
+                    desc: 'null配置', 
+                    config: null
+                },
+                {
+                    desc: '嵌套undefined',
+                    config: { key: { value: undefined, encoding: undefined } }
+                },
+                {
+                    desc: '空数组编码',
+                    config: { key: { value: 'test', encoding: [] } }
+                },
+                {
+                    desc: '编码为null',
+                    config: { key: { value: 'test', encoding: null } }
+                }
+            ];
+            
+            edgeCases.forEach((testCase, index) => {
+                log(`\n--- 边界测试 ${index + 1}: ${testCase.desc} ---`, 'info');
+                
+                try {
+                    // 安全的配置处理
+                    const safeConfig = testCase.config || {};
+                    const keyObj = safeConfig.key || { value: '', encoding: ['HEX'] };
+                    const keyValue = keyObj.value || '';
+                    const keyEncoding = (keyObj.encoding && keyObj.encoding[0]) || 'HEX';
+                    
+                    log(`✅ 边界情况处理成功`, 'success');
+                    log(`   处理后的key值: "${keyValue}"`, 'info');
+                    log(`   处理后的编码: "${keyEncoding}"`, 'info');
+                    
+                } catch (error) {
+                    log(`❌ 边界测试失败: ${error.message}`, 'error');
+                }
+            });
+            
+            log('\n🎯 边界情况测试完成!', 'success');
+        }
+        
+        // 页面加载后自动运行测试
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                runSafetyTests();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

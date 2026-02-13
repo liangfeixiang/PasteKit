@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>秘钥配置存储测试</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-container { max-width: 800px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { margin: 5px; padding: 8px 16px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #f0f0f0; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 4px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔐 秘钥配置存储功能测试</h1>
+        
+        <div class="test-section">
+            <h2>测试说明</h2>
+            <p>本页面用于测试秘钥配置管理组件的存储功能：</p>
+            <ul>
+                <li>✅ 配置自动保存到本地存储</li>
+                <li>✅ 页面刷新后配置仍然存在</li>
+                <li>✅ 导入导出功能</li>
+                <li>✅ 存储错误处理</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>测试步骤</h2>
+            <ol>
+                <li>在下方的配置管理界面中创建几个测试配置</li>
+                <li>刷新页面，检查配置是否仍然存在</li>
+                <li>尝试导出配置到文件</li>
+                <li>清空配置后重新导入</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>配置管理界面</h2>
+            <div id="root"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>存储状态监控</h2>
+            <button onclick="checkStorage()">检查存储状态</button>
+            <button onclick="clearStorage()">清空存储</button>
+            <div id="storage-log" class="log"></div>
+        </div>
+    </div>
+
+    <script type="text/babel">
+        // 模拟存储工具类
+        const StorageUtils = {
+            async get(key) {
+                try {
+                    const item = localStorage.getItem(key);
+                    return item ? JSON.parse(item) : null;
+                } catch (error) {
+                    console.error('Storage get error:', error);
+                    throw error;
+                }
+            },
+            
+            async set(key, value) {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                } catch (error) {
+                    console.error('Storage set error:', error);
+                    throw error;
+                }
+            },
+            
+            async remove(key) {
+                try {
+                    localStorage.removeItem(key);
+                } catch (error) {
+                    console.error('Storage remove error:', error);
+                    throw error;
+                }
+            }
+        };
+
+        // 简单的 Toast 实现
+        const toast = {
+            success: (message) => {
+                console.log('✅ Success:', message);
+                alert('Success: ' + message);
+            },
+            error: (message) => {
+                console.error('❌ Error:', message);
+                alert('Error: ' + message);
+            },
+            info: (message) => {
+                console.log('ℹ️ Info:', message);
+            }
+        };
+
+        // 模拟 UI 组件
+        const Card = ({ children, className = '' }) => (
+            <div className={`border rounded-lg p-4 ${className}`}>
+                {children}
+            </div>
+        );
+        
+        const CardHeader = ({ children }) => (
+            <div className="border-b pb-3 mb-3">
+                {children}
+            </div>
+        );
+        
+        const CardTitle = ({ children }) => (
+            <h3 className="text-lg font-semibold">
+                {children}
+            </h3>
+        );
+        
+        const CardContent = ({ children }) => (
+            <div>
+                {children}
+            </div>
+        );
+        
+        const Button = ({ children, onClick, variant = 'default', size = 'default', disabled = false, className = '' }) => {
+            const baseClasses = 'px-4 py-2 rounded-md font-medium transition-colors';
+            const variants = {
+                default: 'bg-blue-500 text-white hover:bg-blue-600',
+                secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300',
+                outline: 'border border-gray-300 text-gray-700 hover:bg-gray-50',
+                destructive: 'bg-red-500 text-white hover:bg-red-600'
+            };
+            const sizes = {
+                default: 'h-10 px-4 py-2',
+                sm: 'h-9 px-3 py-1.5 text-sm',
+                lg: 'h-11 px-8 py-3'
+            };
+            
+            return (
+                <button
+                    className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    onClick={onClick}
+                    disabled={disabled}
+                >
+                    {children}
+                </button>
+            );
+        };
+        
+        const Input = ({ value, onChange, placeholder, className = '' }) => (
+            <input
+                type="text"
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                className={`border rounded-md px-3 py-2 w-full ${className}`}
+            />
+        );
+        
+        const Textarea = ({ value, onChange, placeholder, className = '', rows = 3 }) => (
+            <textarea
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                className={`border rounded-md px-3 py-2 w-full font-mono ${className}`}
+                rows={rows}
+            />
+        );
+        
+        // 简化的秘钥配置管理组件
+        function KeyConfigManager({ onConfigChange, initialConfigs = [], storageKey = 'keyConfigs' }) {
+            const [configs, setConfigs] = React.useState(initialConfigs);
+            const [selectedConfig, setSelectedConfig] = React.useState('');
+            const [isLoading, setIsLoading] = React.useState(false);
+
+            // 初始化：从存储加载配置
+            React.useEffect(() => {
+                loadConfigsFromStorage();
+            }, []);
+
+            const loadConfigsFromStorage = async () => {
+                try {
+                    setIsLoading(true);
+                    const storedConfigs = await StorageUtils.get(storageKey);
+                    
+                    if (storedConfigs && Array.isArray(storedConfigs) && storedConfigs.length > 0) {
+                        setConfigs(storedConfigs);
+                        if (storedConfigs.length > 0) {
+                            setSelectedConfig(storedConfigs[0].name);
+                            onConfigChange?.(storedConfigs[0]);
+                        }
+                    } else if (initialConfigs.length > 0) {
+                        await StorageUtils.set(storageKey, initialConfigs);
+                        setConfigs(initialConfigs);
+                        if (initialConfigs.length > 0) {
+                            setSelectedConfig(initialConfigs[0].name);
+                            onConfigChange?.(initialConfigs[0]);
+                        }
+                    }
+                } catch (error) {
+                    console.error('加载配置失败:', error);
+                    toast.error('加载配置失败: ' + error.message);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            const saveConfigsToStorage = async (newConfigs) => {
+                try {
+                    await StorageUtils.set(storageKey, newConfigs);
+                    return true;
+                } catch (error) {
+                    console.error('保存配置失败:', error);
+                    toast.error('保存配置失败: ' + error.message);
+                    return false;
+                }
+            };
+
+            const addTestConfig = async () => {
+                const newConfig = {
+                    name: `测试配置_${Date.now()}`,
+                    algorithm: 'AES',
+                    mode: 'CBC',
+                    padding: 'PKCS7',
+                    key: 'test-key-' + Math.random().toString(36).substr(2, 16),
+                    keyEncoding: 'UTF-8',
+                    iv: 'test-iv-' + Math.random().toString(36).substr(2, 16),
+                    ivEncoding: 'UTF-8',
+                    plaintextEncoding: 'UTF-8',
+                    ciphertextEncoding: 'BASE64',
+                    createdAt: Date.now()
+                };
+
+                const updatedConfigs = [...configs, newConfig];
+                const success = await saveConfigsToStorage(updatedConfigs);
+                
+                if (success) {
+                    setConfigs(updatedConfigs);
+                    setSelectedConfig(newConfig.name);
+                    toast.success('测试配置已创建并保存');
+                }
+            };
+
+            const clearAllConfigs = async () => {
+                if (confirm('确定要清空所有配置吗？')) {
+                    const success = await saveConfigsToStorage([]);
+                    
+                    if (success) {
+                        setConfigs([]);
+                        setSelectedConfig('');
+                        toast.success('所有配置已清空');
+                    }
+                }
+            };
+
+            return (
+                <div className="space-y-4">
+                    {isLoading && (
+                        <div className="text-center py-4">
+                            <div>加载配置中...</div>
+                        </div>
+                    )}
+                    
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center justify-between">
+                                <span>🔐 秘钥配置管理</span>
+                                <div className="flex gap-2">
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={loadConfigsFromStorage}
+                                        disabled={isLoading}
+                                    >
+                                        🔄 刷新
+                                    </Button>
+                                    <Button 
+                                        variant="secondary" 
+                                        size="sm"
+                                        onClick={addTestConfig}
+                                        disabled={isLoading}
+                                    >
+                                        ➕ 添加测试配置
+                                    </Button>
+                                    <Button 
+                                        variant="destructive" 
+                                        size="sm"
+                                        onClick={clearAllConfigs}
+                                        disabled={configs.length === 0 || isLoading}
+                                    >
+                                        🗑️ 清空
+                                    </Button>
+                                </div>
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="text-lg font-semibold">配置列表</h3>
+                                    <div className="text-sm text-gray-500">
+                                        共 {configs.length} 个配置 {isLoading && '(加载中...)'}
+                                    </div>
+                                </div>
+                                
+                                <div className="space-y-2 max-h-64 overflow-y-auto border rounded-lg p-2">
+                                    {configs.length > 0 ? (
+                                        configs.map((config) => (
+                                            <div 
+                                                key={config.name}
+                                                className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                                                    selectedConfig === config.name 
+                                                        ? 'bg-blue-50 border-blue-500' 
+                                                        : 'hover:bg-gray-50'
+                                                }`}
+                                                onClick={() => setSelectedConfig(config.name)}
+                                            >
+                                                <div className="flex justify-between items-start">
+                                                    <div className="flex-1">
+                                                        <div className="font-medium">{config.name}</div>
+                                                        <div className="text-sm text-gray-500 mt-1">
+                                                            <span className="inline-block mr-3">算法: {config.algorithm}</span>
+                                                            <span className="inline-block mr-3">编码: {config.plaintextEncoding}</span>
+                                                            <span className="inline-block">创建时间: {new Date(config.createdAt).toLocaleString()}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-8 text-gray-500">
+                                            暂无配置，请点击"添加测试配置"按钮
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                {selectedConfig && (
+                                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                                        <div className="text-sm text-gray-600 space-y-1">
+                                            <div>
+                                                当前配置: <span className="font-medium">{selectedConfig}</span>
+                                            </div>
+                                            <div>
+                                                算法: <span className="font-medium">
+                                                    {configs.find(c => c.name === selectedConfig)?.algorithm || '未设置'}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                创建时间: <span className="font-medium">
+                                                    {new Date(configs.find(c => c.name === selectedConfig)?.createdAt).toLocaleString()}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            );
+        }
+
+        // 渲染组件
+        function App() {
+            const handleConfigChange = (config) => {
+                console.log('配置变更:', config);
+            };
+
+            return (
+                <KeyConfigManager 
+                    onConfigChange={handleConfigChange}
+                    storageKey="test-key-configs"
+                />
+            );
+        }
+
+        // 挂载应用
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+        // 存储监控函数
+        function checkStorage() {
+            const logDiv = document.getElementById('storage-log');
+            try {
+                const configs = localStorage.getItem('test-key-configs');
+                const parsed = configs ? JSON.parse(configs) : null;
+                
+                logDiv.innerHTML = `
+                    <div><strong>存储键:</strong> test-key-configs</div>
+                    <div><strong>是否存在:</strong> ${!!configs}</div>
+                    <div><strong>配置数量:</strong> ${parsed ? parsed.length : 0}</div>
+                    <div><strong>原始数据:</strong> ${configs || 'null'}</div>
+                    <div><strong>解析结果:</strong> ${JSON.stringify(parsed, null, 2)}</div>
+                `;
+            } catch (error) {
+                logDiv.innerHTML = `<div style="color: red;">错误: ${error.message}</div>`;
+            }
+        }
+
+        function clearStorage() {
+            if (confirm('确定要清空存储吗？')) {
+                localStorage.removeItem('test-key-configs');
+                checkStorage();
+                toast.success('存储已清空');
+            }
+        }
+
+        // 页面加载完成后检查存储
+        window.addEventListener('load', () => {
+            setTimeout(checkStorage, 1000);
+        });
+    </script>
+</body>
+</html>

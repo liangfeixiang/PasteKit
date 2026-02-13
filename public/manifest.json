@@ -7,6 +7,7 @@
     "default_popup": "popup.html",
     "default_title": "ModuKit - 开发者工具箱"
   },
+  "options_page": "options.html",
   "icons": {
     "16": "pastemagic_16.png",
     "32": "pastemagic_32.png",

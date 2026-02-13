@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>存储工具类测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 存储工具类测试</h1>
+        
+        <div class="test-section">
+            <h2>📊 环境信息</h2>
+            <div id="environmentInfo"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 基础功能测试</h2>
+            <button class="btn-primary" onclick="testBasicFunctions()">测试基础功能</button>
+            <button class="btn-success" onclick="testBatchOperations()">测试批量操作</button>
+            <button class="btn-danger" onclick="clearAllData()">清空所有数据</button>
+            <div id="basicResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔐 秘钥存储测试</h2>
+            <textarea id="keyData" rows="6" style="width: 100%; font-family: monospace;" placeholder="输入秘钥数据...">{
+  "publicKey": "-----BEGIN PUBLIC KEY-----\n...",
+  "privateKey": "-----BEGIN PRIVATE KEY-----\n...",
+  "aesKey": "my-secret-key",
+  "timestamp": 1234567890
+}</textarea>
+            <br><br>
+            <button class="btn-primary" onclick="saveKeyData()">保存秘钥</button>
+            <button class="btn-success" onclick="loadKeyData()">加载秘钥</button>
+            <div id="keyResult" class="result"></div>
+            <pre id="keyOutput" style="display: none;"></pre>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 测试结果</h2>
+            <pre id="testLog"></pre>
+        </div>
+    </div>
+
+    <script type="module">
+        import { StorageUtils } from './src/pastemagic/utils/storageutils.js';
+
+        // 显示环境信息
+        document.getElementById('environmentInfo').innerHTML = `
+            <p><strong>Chrome扩展环境:</strong> ${StorageUtils.isChromeExtension() ? '✅ 是' : '❌ 否'}</p>
+            <p><strong>localStorage支持:</strong> ${StorageUtils.supportsLocalStorage() ? '✅ 是' : '❌ 否'}</p>
+        `;
+
+        // 日志记录函数
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('testLog');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+
+        // 显示结果函数
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `result ${type}`;
+            element.style.display = 'block';
+        }
+
+        // 测试基础功能
+        window.testBasicFunctions = async function() {
+            try {
+                log('开始基础功能测试...');
+                
+                // 测试setItem和getItem
+                const testData = { message: 'Hello Storage!', timestamp: Date.now() };
+                await StorageUtils.setItem('test_basic', testData);
+                log('✅ setItem 成功');
+                
+                const result = await StorageUtils.getItem('test_basic');
+                log(`✅ getItem 成功: ${JSON.stringify(result.test_basic)}`);
+                
+                // 测试removeItem
+                await StorageUtils.removeItem('test_basic');
+                const afterRemove = await StorageUtils.getItem('test_basic');
+                log(`✅ removeItem 成功: ${afterRemove.test_basic === null ? '数据已删除' : '删除失败'}`);
+                
+                showResult('basicResult', '✅ 基础功能测试通过！', 'success');
+                log('🎉 基础功能测试完成');
+                
+            } catch (error) {
+                log(`❌ 基础功能测试失败: ${error.message}`, 'error');
+                showResult('basicResult', `❌ 测试失败: ${error.message}`, 'error');
+            }
+        };
+
+        // 测试批量操作
+        window.testBatchOperations = async function() {
+            try {
+                log('开始批量操作测试...');
+                
+                // 测试批量设置
+                const batchData = {
+                    'batch_test_1': { value: 'data1', type: 'string' },
+                    'batch_test_2': { value: 123, type: 'number' },
+                    'batch_test_3': { value: true, type: 'boolean' }
+                };
+                
+                await StorageUtils.setItems(batchData);
+                log('✅ 批量设置成功');
+                
+                // 测试批量获取
+                const keys = ['batch_test_1', 'batch_test_2', 'batch_test_3'];
+                const batchResult = await StorageUtils.getItem(keys);
+                log(`✅ 批量获取成功: ${Object.keys(batchResult).length} 个项目`);
+                
+                // 显示结果
+                Object.entries(batchResult).forEach(([key, value]) => {
+                    log(`  ${key}: ${JSON.stringify(value)}`);
+                });
+                
+                showResult('basicResult', '✅ 批量操作测试通过！', 'success');
+                log('🎉 批量操作测试完成');
+                
+            } catch (error) {
+                log(`❌ 批量操作测试失败: ${error.message}`, 'error');
+                showResult('basicResult', `❌ 测试失败: ${error.message}`, 'error');
+            }
+        };
+
+        // 保存秘钥数据
+        window.saveKeyData = async function() {
+            try {
+                const keyData = JSON.parse(document.getElementById('keyData').value);
+                await StorageUtils.setItem('encryptionKeys', keyData);
+                log('✅ 秘钥数据保存成功');
+                showResult('keyResult', '✅ 秘钥保存成功！', 'success');
+            } catch (error) {
+                log(`❌ 秘钥保存失败: ${error.message}`, 'error');
+                showResult('keyResult', `❌ 保存失败: ${error.message}`, 'error');
+            }
+        };
+
+        // 加载秘钥数据
+        window.loadKeyData = async function() {
+            try {
+                const result = await StorageUtils.getItem('encryptionKeys');
+                const keyData = result.encryptionKeys;
+                
+                if (keyData) {
+                    document.getElementById('keyData').value = JSON.stringify(keyData, null, 2);
+                    document.getElementById('keyOutput').textContent = JSON.stringify(keyData, null, 2);
+                    document.getElementById('keyOutput').style.display = 'block';
+                    log('✅ 秘钥数据加载成功');
+                    showResult('keyResult', '✅ 秘钥加载成功！', 'success');
+                } else {
+                    log('⚠️ 未找到保存的秘钥数据');
+                    showResult('keyResult', '📋 暂无保存的秘钥数据', 'info');
+                }
+            } catch (error) {
+                log(`❌ 秘钥加载失败: ${error.message}`, 'error');
+                showResult('keyResult', `❌ 加载失败: ${error.message}`, 'error');
+            }
+        };
+
+        // 清空所有数据
+        window.clearAllData = async function() {
+            if (confirm('确定要清空所有测试数据吗？')) {
+                try {
+                    // 清除测试相关的键
+                    const testKeys = ['test_basic', 'batch_test_1', 'batch_test_2', 'batch_test_3', 'encryptionKeys'];
+                    await StorageUtils.removeItem(testKeys);
+                    log('✅ 测试数据已清空');
+                    showResult('basicResult', '🗑️ 数据已清空', 'info');
+                    
+                    // 清空输出区域
+                    document.getElementById('keyData').value = '';
+                    document.getElementById('keyOutput').style.display = 'none';
+                } catch (error) {
+                    log(`❌ 清空数据失败: ${error.message}`, 'error');
+                    showResult('basicResult', `❌ 清空失败: ${error.message}`, 'error');
+                }
+            }
+        };
+
+        log('存储工具类测试页面已加载');
+        log(`环境: ${StorageUtils.isChromeExtension() ? 'Chrome扩展' : '普通网页'}`);
+    </script>
+</body>
+</html>

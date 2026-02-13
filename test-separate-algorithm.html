@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分离算法选择测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .demo-section {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .algorithm-display {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+        .selection-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin: 16px 0;
+        }
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: white;
+            font-size: 14px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold mb-6 text-center">🔧 分离算法选择演示</h1>
+        
+        <div class="demo-section">
+            <h2 class="text-xl font-semibold mb-4">算法组件分离选择</h2>
+            
+            <div class="selection-row">
+                <div>
+                    <label for="algorithmType">算法类型</label>
+                    <select id="algorithmType" onchange="updateAlgorithm()">
+                        <option value="AES">AES</option>
+                        <option value="SM4">SM4</option>
+                        <option value="RSA">RSA</option>
+                    </select>
+                </div>
+                
+                <div id="modeContainer">
+                    <label for="mode">加密模式</label>
+                    <select id="mode" onchange="updateAlgorithm()">
+                        <option value="CBC">CBC</option>
+                        <option value="ECB">ECB</option>
+                        <option value="CFB">CFB</option>
+                        <option value="OFB">OFB</option>
+                    </select>
+                </div>
+                
+                <div id="paddingContainer">
+                    <label for="padding">填充方式</label>
+                    <select id="padding" onchange="updateAlgorithm()">
+                        <option value="PKCS7">PKCS7</option>
+                        <option value="PKCS5">PKCS5</option>
+                        <option value="NoPadding">No Padding</option>
+                        <option value="ZeroPadding">Zero Padding</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="algorithm-display">
+                <div class="text-sm text-gray-600 mb-2">完整算法字符串:</div>
+                <div id="algorithmResult" class="text-lg font-mono text-blue-600">AES/CBC/PKCS7</div>
+            </div>
+            
+            <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                <h3 class="font-medium text-blue-800 mb-2">✨ 功能特点</h3>
+                <ul class="text-sm text-blue-700 space-y-1">
+                    <li>• 算法类型、模式、填充三项独立选择</li>
+                    <li>• RSA算法时隐藏模式和填充选项</li>
+                    <li>• 保存时自动拼接为完整算法字符串</li>
+                    <li>• 支持AES、SM4对称算法和RSA非对称算法</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2 class="text-xl font-semibold mb-4">支持的算法组合</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 border rounded-lg">
+                    <h3 class="font-medium text-lg mb-3">🔐 对称算法 (AES/SM4)</h3>
+                    <div class="space-y-2 text-sm">
+                        <div><strong>算法类型:</strong> AES, SM4</div>
+                        <div><strong>模式选项:</strong> CBC, ECB, CFB, OFB</div>
+                        <div><strong>填充选项:</strong> PKCS7, PKCS5, NoPadding, ZeroPadding</div>
+                        <div class="mt-2 p-2 bg-gray-50 rounded">
+                            <div class="text-xs text-gray-600">示例组合:</div>
+                            <div class="font-mono text-xs">AES/CBC/PKCS7</div>
+                            <div class="font-mono text-xs">SM4/ECB/NoPadding</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-4 border rounded-lg">
+                    <h3 class="font-medium text-lg mb-3">🔐 非对称算法 (RSA)</h3>
+                    <div class="space-y-2 text-sm">
+                        <div><strong>算法类型:</strong> RSA</div>
+                        <div><strong>模式选项:</strong> 不显示</div>
+                        <div><strong>填充选项:</strong> 不显示</div>
+                        <div class="mt-2 p-2 bg-gray-50 rounded">
+                            <div class="text-xs text-gray-600">算法字符串:</div>
+                            <div class="font-mono text-xs">RSA</div>
+                            <div class="text-xs text-gray-500 mt-1">注: RSA使用标准PKCS#1填充</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-8">
+            <button onclick="resetDemo()" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 mr-4">
+                🔄 重置演示
+            </button>
+            <button onclick="testAllCombinations()" class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                🧪 测试所有组合
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function updateAlgorithm() {
+            const algorithmType = document.getElementById('algorithmType').value;
+            const mode = document.getElementById('mode').value;
+            const padding = document.getElementById('padding').value;
+            
+            const modeContainer = document.getElementById('modeContainer');
+            const paddingContainer = document.getElementById('paddingContainer');
+            
+            // RSA算法时隐藏模式和填充选项
+            if (algorithmType === 'RSA') {
+                modeContainer.style.display = 'none';
+                paddingContainer.style.display = 'none';
+                document.getElementById('algorithmResult').textContent = 'RSA';
+            } else {
+                modeContainer.style.display = 'block';
+                paddingContainer.style.display = 'block';
+                document.getElementById('algorithmResult').textContent = `${algorithmType}/${mode}/${padding}`;
+            }
+        }
+        
+        function resetDemo() {
+            document.getElementById('algorithmType').value = 'AES';
+            document.getElementById('mode').value = 'CBC';
+            document.getElementById('padding').value = 'PKCS7';
+            updateAlgorithm();
+        }
+        
+        function testAllCombinations() {
+            const algorithms = ['AES', 'SM4'];
+            const modes = ['CBC', 'ECB', 'CFB', 'OFB'];
+            const paddings = ['PKCS7', 'PKCS5', 'NoPadding', 'ZeroPadding'];
+            
+            console.log('🧪 测试所有算法组合:');
+            algorithms.forEach(alg => {
+                modes.forEach(mode => {
+                    paddings.forEach(padding => {
+                        console.log(`${alg}/${mode}/${padding}`);
+                    });
+                });
+            });
+            
+            console.log('\n🔐 RSA算法:');
+            console.log('RSA');
+            
+            alert('请查看控制台输出的所有算法组合测试结果');
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAlgorithm();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宽屏布局测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        .container-debug { border: 2px solid #ff0000; }
+        .content-debug { border: 2px solid #00ff00; }
+        .card-debug { border: 2px solid #0000ff; }
+    </style>
+</head>
+<body>
+    <!-- 模拟超宽屏幕 -->
+    <div style="width: 1920px; height: 1080px;" class="flex bg-gray-100">
+        <!-- 左侧边栏 -->
+        <div class="w-64 bg-white border-r flex-shrink-0">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-bold">PasteMagic</h2>
+                <p class="text-sm text-gray-500">设置中心</p>
+            </div>
+            <nav class="p-2">
+                <div class="py-2 px-4 bg-blue-50 text-blue-700 rounded">
+                    🔐 秘钥配置
+                </div>
+                <div class="py-2 px-4 hover:bg-gray-100 rounded mt-1">
+                    🧪 加密测试
+                </div>
+            </nav>
+        </div>
+
+        <!-- 主内容区域 - 当前布局 -->
+        <div class="flex-1 overflow-auto">
+            <div class="p-4 min-h-full">
+                <div class="w-full container-debug">
+                    <!-- 秘钥配置管理组件 -->
+                    <div class="space-y-4 w-full h-full">
+                        <div class="bg-white rounded-lg border shadow-sm card-debug">
+                            <div class="p-6 border-b">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-semibold">🔐 秘钥配置管理</h3>
+                                    <div class="flex gap-2">
+                                        <button class="px-3 py-1 bg-blue-500 text-white rounded text-sm">
+                                            🔄 刷新
+                                        </button>
+                                        <button class="px-3 py-1 bg-blue-500 text-white rounded text-sm">
+                                            ➕ 新建配置
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-6 content-debug">
+                                <div class="space-y-4">
+                                    <div class="flex justify-between items-center">
+                                        <h4 class="text-lg font-semibold">配置列表</h4>
+                                        <div class="text-sm text-gray-500">共 3 个配置</div>
+                                    </div>
+                                    
+                                    <!-- 配置列表 -->
+                                    <div class="space-y-2 max-h-96 overflow-y-auto border rounded-lg p-3">
+                                        <div class="p-4 rounded-lg border bg-blue-50 hover:bg-blue-100 cursor-pointer">
+                                            <div class="flex justify-between items-start">
+                                                <div class="flex-1">
+                                                    <div class="font-medium">生产环境配置</div>
+                                                    <div class="text-sm text-gray-600 mt-1">
+                                                        <span class="inline-block mr-4">算法: AES</span>
+                                                        <span class="inline-block mr-4">模式: CBC</span>
+                                                        <span class="inline-block">填充: PKCS7</span>
+                                                    </div>
+                                                    <div class="text-xs text-gray-500 mt-1">
+                                                        明文编码: UTF-8 • 密文编码: BASE64
+                                                    </div>
+                                                </div>
+                                                <div class="flex gap-1 ml-2">
+                                                    <button class="px-2 py-1 border rounded hover:bg-gray-100">✏️</button>
+                                                    <button class="px-2 py-1 border rounded hover:bg-gray-100">🗑️</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="p-4 rounded-lg border hover:bg-gray-50 cursor-pointer">
+                                            <div class="flex justify-between items-start">
+                                                <div class="flex-1">
+                                                    <div class="font-medium">测试环境配置</div>
+                                                    <div class="text-sm text-gray-600 mt-1">
+                                                        <span class="inline-block mr-4">算法: RSA</span>
+                                                        <span class="inline-block mr-4">密钥长度: 2048</span>
+                                                        <span class="inline-block">格式: PEM</span>
+                                                    </div>
+                                                    <div class="text-xs text-gray-500 mt-1">
+                                                        明文编码: UTF-8 • 密文编码: BASE64
+                                                    </div>
+                                                </div>
+                                                <div class="flex gap-1 ml-2">
+                                                    <button class="px-2 py-1 border rounded hover:bg-gray-100">✏️</button>
+                                                    <button class="px-2 py-1 border rounded hover:bg-gray-100">🗑️</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="p-4 rounded-lg border hover:bg-gray-50 cursor-pointer">
+                                            <div class="flex justify-between items-start">
+                                                <div class="flex-1">
+                                                    <div class="font-medium">开发环境配置</div>
+                                                    <div class="text-sm text-gray-600 mt-1">
+                                                        <span class="inline-block mr-4">算法: SM4</span>
+                                                        <span class="inline-block mr-4">模式: ECB</span>
+                                                        <span class="inline-block">填充: NoPadding</span>
+                                                    </div>
+                                                    <div class="text-xs text-gray-500 mt-1">
+                                                        明文编码: GBK • 密文编码: HEX
+                                                    </div>
+                                                </div>
+                                                <div class="flex gap-1 ml-2">
+                                                    <button class="px-2 py-1 border rounded hover:bg-gray-100">✏️</button>
+                                                    <button class="px-2 py-1 border rounded hover:bg-gray-100">🗑️</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 分页控件 -->
+                                    <div class="flex justify-center">
+                                        <div class="flex items-center gap-1">
+                                            <button class="px-3 py-1 border rounded hover:bg-gray-100">‹</button>
+                                            <button class="px-3 py-1 bg-blue-500 text-white rounded">1</button>
+                                            <button class="px-3 py-1 border rounded hover:bg-gray-100">2</button>
+                                            <button class="px-3 py-1 border rounded hover:bg-gray-100">›</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 当前配置信息 -->
+                                    <div class="mt-4 p-4 bg-gray-100 rounded-lg">
+                                        <div class="text-sm text-gray-600 space-y-1">
+                                            <div>
+                                                当前配置: <span class="font-medium text-gray-900">生产环境配置</span>
+                                                <span class="mx-2">•</span>
+                                                算法: <span class="font-medium text-gray-900">AES/CBC/PKCS7</span>
+                                            </div>
+                                            <div>
+                                                明文编码: <span class="font-medium">UTF-8</span>
+                                                <span class="mx-2">•</span>
+                                                密文编码: <span class="font-medium">BASE64</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

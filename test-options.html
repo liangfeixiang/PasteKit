@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Options 页面测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        textarea, input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Options 页面功能测试</h1>
+        
+        <div class="test-section">
+            <h2>🔐 秘钥配置测试</h2>
+            <textarea id="testPublicKey" rows="4" placeholder="公钥"></textarea>
+            <textarea id="testPrivateKey" rows="4" placeholder="私钥"></textarea>
+            <input type="text" id="testAesKey" placeholder="AES密钥">
+            <input type="text" id="testAesIv" placeholder="AES IV (可选)">
+            
+            <button class="btn-primary" onclick="saveTestKeys()">保存秘钥</button>
+            <button class="btn-success" onclick="loadTestKeys()">加载秘钥</button>
+            <button class="btn-danger" onclick="clearTestKeys()">清空秘钥</button>
+            
+            <div id="keyResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🧪 加密解密测试</h2>
+            <textarea id="testText" rows="3" placeholder="测试文本">Hello World! 测试消息</textarea>
+            <select id="algorithmSelect">
+                <option value="RSA">RSA</option>
+                <option value="AES/CBC/PKCS5Padding">AES/CBC/PKCS5Padding</option>
+                <option value="AES/ECB/PKCS5Padding">AES/ECB/PKCS5Padding</option>
+            </select>
+            
+            <button class="btn-primary" onclick="testEncryption()">加密</button>
+            <button class="btn-success" onclick="testDecryption()">解密</button>
+            <button onclick="fullTest()">完整测试</button>
+            
+            <textarea id="encryptedResult" rows="3" placeholder="加密结果" readonly></textarea>
+            <textarea id="decryptedResult" rows="3" placeholder="解密结果" readonly></textarea>
+            
+            <div id="testResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟 Chrome storage API
+        const mockStorage = {
+            data: {},
+            async set(items) {
+                Object.assign(this.data, items);
+                console.log('Mock storage set:', items);
+            },
+            async get(keys) {
+                if (Array.isArray(keys)) {
+                    const result = {};
+                    keys.forEach(key => {
+                        result[key] = this.data[key];
+                    });
+                    return result;
+                } else if (typeof keys === 'string') {
+                    return { [keys]: this.data[keys] };
+                } else {
+                    return this.data;
+                }
+            },
+            async remove(key) {
+                delete this.data[key];
+                console.log('Mock storage removed:', key);
+            }
+        };
+
+        // 如果不在 Chrome 环境中，使用模拟存储
+        const storage = typeof chrome !== 'undefined' && chrome.storage ? chrome.storage.local : mockStorage;
+
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `result ${type}`;
+            element.style.display = 'block';
+        }
+
+        async function saveTestKeys() {
+            try {
+                const keys = {
+                    publicKey: document.getElementById('testPublicKey').value.trim(),
+                    privateKey: document.getElementById('testPrivateKey').value.trim(),
+                    aesKey: document.getElementById('testAesKey').value.trim(),
+                    aesIv: document.getElementById('testAesIv').value.trim(),
+                    timestamp: Date.now()
+                };
+
+                if (!keys.aesKey) {
+                    showMessage('keyResult', '❌ AES密钥不能为空', 'error');
+                    return;
+                }
+
+                await storage.set({ encryptionKeys: keys });
+                showMessage('keyResult', '✅ 秘钥保存成功！', 'success');
+            } catch (error) {
+                showMessage('keyResult', `❌ 保存失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadTestKeys() {
+            try {
+                const result = await storage.get(['encryptionKeys']);
+                if (result.encryptionKeys) {
+                    const keys = result.encryptionKeys;
+                    document.getElementById('testPublicKey').value = keys.publicKey || '';
+                    document.getElementById('testPrivateKey').value = keys.privateKey || '';
+                    document.getElementById('testAesKey').value = keys.aesKey || '';
+                    document.getElementById('testAesIv').value = keys.aesIv || '';
+                    showMessage('keyResult', '📥 秘钥加载成功！', 'info');
+                } else {
+                    showMessage('keyResult', '📋 暂无保存的秘钥', 'info');
+                }
+            } catch (error) {
+                showMessage('keyResult', `❌ 加载失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearTestKeys() {
+            if (confirm('确定要清空所有秘钥吗？')) {
+                try {
+                    await storage.remove('encryptionKeys');
+                    document.getElementById('testPublicKey').value = '';
+                    document.getElementById('testPrivateKey').value = '';
+                    document.getElementById('testAesKey').value = '';
+                    document.getElementById('testAesIv').value = '';
+                    showMessage('keyResult', '🗑️ 秘钥已清空', 'info');
+                } catch (error) {
+                    showMessage('keyResult', `❌ 清空失败: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function testEncryption() {
+            const plaintext = document.getElementById('testText').value.trim();
+            const algorithm = document.getElementById('algorithmSelect').value;
+            
+            if (!plaintext) {
+                showMessage('testResult', '❌ 请输入测试文本', 'error');
+                return;
+            }
+
+            try {
+                let config;
+                let ciphertext;
+
+                switch (algorithm) {
+                    case 'RSA':
+                        const rsaKeys = await getRSAKeys();
+                        // 简单的 Base64 编码模拟 RSA 加密
+                        ciphertext = btoa(plaintext);
+                        break;
+
+                    case 'AES/CBC/PKCS5Padding':
+                    case 'AES/ECB/PKCS5Padding':
+                        const aesKeys = await getAESKeys();
+                        // 简单的异或加密模拟 AES
+                        ciphertext = simpleXorEncrypt(plaintext, aesKeys.key);
+                        break;
+
+                    default:
+                        throw new Error(`不支持的算法: ${algorithm}`);
+                }
+
+                document.getElementById('encryptedResult').value = ciphertext;
+                showMessage('testResult', `✅ ${algorithm} 加密成功！`, 'success');
+            } catch (error) {
+                showMessage('testResult', `❌ 加密失败: ${error.message}`, 'error');
+                document.getElementById('encryptedResult').value = '';
+            }
+        }
+
+        async function testDecryption() {
+            const ciphertext = document.getElementById('encryptedResult').value.trim();
+            const algorithm = document.getElementById('algorithmSelect').value;
+            
+            if (!ciphertext) {
+                showMessage('testResult', '❌ 请输入密文', 'error');
+                return;
+            }
+
+            try {
+                let config;
+                let plaintext;
+
+                switch (algorithm) {
+                    case 'RSA':
+                        const rsaKeys = await getRSAKeys();
+                        // 简单的 Base64 解码模拟 RSA 解密
+                        plaintext = atob(ciphertext);
+                        break;
+
+                    case 'AES/CBC/PKCS5Padding':
+                    case 'AES/ECB/PKCS5Padding':
+                        const aesKeys = await getAESKeys();
+                        // 简单的异或解密模拟 AES
+                        plaintext = simpleXorDecrypt(ciphertext, aesKeys.key);
+                        break;
+
+                    default:
+                        throw new Error(`不支持的算法: ${algorithm}`);
+                }
+
+                document.getElementById('decryptedResult').value = plaintext;
+                showMessage('testResult', `✅ ${algorithm} 解密成功！`, 'success');
+            } catch (error) {
+                showMessage('testResult', `❌ 解密失败: ${error.message}`, 'error');
+                document.getElementById('decryptedResult').value = '';
+            }
+        }
+
+        async function fullTest() {
+            const originalText = document.getElementById('testText').value.trim();
+            const algorithm = document.getElementById('algorithmSelect').value;
+            
+            if (!originalText) {
+                showMessage('testResult', '❌ 请输入测试文本', 'error');
+                return;
+            }
+
+            try {
+                showMessage('testResult', `🧪 正在执行 ${algorithm} 完整测试...`, 'info');
+                
+                // 加密
+                await testEncryption();
+                const ciphertext = document.getElementById('encryptedResult').value;
+                
+                if (!ciphertext) {
+                    throw new Error('加密失败');
+                }
+
+                // 解密
+                await testDecryption();
+                const decryptedText = document.getElementById('decryptedResult').value;
+                
+                // 验证
+                if (originalText === decryptedText) {
+                    showMessage('testResult', `✅ ${algorithm} 完整测试通过！`, 'success');
+                } else {
+                    showMessage('testResult', `❌ ${algorithm} 测试失败！原文与解密结果不一致。`, 'error');
+                }
+
+            } catch (error) {
+                showMessage('testResult', `❌ 完整测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function getRSAKeys() {
+            const result = await storage.get(['encryptionKeys']);
+            const keys = result.encryptionKeys;
+            
+            if (!keys || !keys.publicKey || !keys.privateKey) {
+                throw new Error('请先配置RSA公钥和私钥');
+            }
+            
+            return {
+                publicKey: keys.publicKey,
+                privateKey: keys.privateKey
+            };
+        }
+
+        async function getAESKeys() {
+            const result = await storage.get(['encryptionKeys']);
+            const keys = result.encryptionKeys;
+            
+            if (!keys || !keys.aesKey) {
+                throw new Error('请先配置AES密钥');
+            }
+            
+            return {
+                key: keys.aesKey,
+                iv: keys.aesIv || ''
+            };
+        }
+
+        // 简单的 XOR 加密函数（仅用于演示）
+        function simpleXorEncrypt(text, key) {
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+            }
+            return btoa(result); // Base64 编码
+        }
+
+        function simpleXorDecrypt(encrypted, key) {
+            const text = atob(encrypted); // Base64 解码
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+            }
+            return result;
+        }
+
+        // 页面加载时尝试加载已保存的秘钥
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadTestKeys();
+        });
+    </script>
+</body>
+</html>

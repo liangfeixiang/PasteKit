@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>密钥配置表格布局测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 256px;
+            border-right: 1px solid #e5e7eb;
+            background: white;
+            flex-shrink: 0;
+        }
+        .main-content {
+            flex: 1;
+            overflow: auto;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 模拟左侧菜单 -->
+        <div class="sidebar">
+            <div class="p-4 border-b bg-background">
+                <h2 class="text-xl font-bold">PasteMagic</h2>
+                <p class="text-sm text-muted-foreground">设置中心</p>
+            </div>
+            <nav class="p-2">
+                <div class="p-2 hover:bg-gray-100 rounded cursor-pointer font-medium">
+                    🔐 秘钥配置
+                </div>
+                <div class="p-2 hover:bg-gray-100 rounded cursor-pointer">
+                    🧪 加密解密测试
+                </div>
+                <div class="p-2 hover:bg-gray-100 rounded cursor-pointer">
+                    ℹ️ 关于
+                </div>
+            </nav>
+        </div>
+
+        <!-- 主内容区域 -->
+        <div class="main-content">
+            <div class="w-full max-w-none h-full">
+                <div class="space-y-4 w-full max-w-none h-full">
+                    <!-- 配置管理卡片 -->
+                    <div class="w-full h-full flex flex-col bg-white rounded-lg border shadow-sm">
+                        <div class="flex-shrink-0 p-6">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-xl font-bold">🔐 秘钥配置管理</h2>
+                                <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm font-medium">
+                                    ➕ 新建配置
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="flex-1 flex flex-col overflow-hidden px-6 pb-6">
+                            <div class="space-y-4 flex-1 flex flex-col">
+                                <div class="flex justify-between items-center flex-shrink-0">
+                                    <h3 class="text-lg font-semibold">配置列表</h3>
+                                    <div class="text-sm text-gray-500">
+                                        共 5 个配置
+                                    </div>
+                                </div>
+                                
+                                <!-- 配置表格 - 占满剩余空间 -->
+                                <div class="flex-1 overflow-y-auto border rounded-lg">
+                                    <table class="w-full">
+                                        <thead class="bg-gray-100 sticky top-0">
+                                            <tr>
+                                                <th class="text-left py-3 px-4 font-semibold text-sm border-b">配置名称</th>
+                                                <th class="text-left py-3 px-4 font-semibold text-sm border-b">算法类型</th>
+                                                <th class="text-left py-3 px-4 font-semibold text-sm border-b">明文编码</th>
+                                                <th class="text-left py-3 px-4 font-semibold text-sm border-b">密文编码</th>
+                                                <th class="text-left py-3 px-4 font-semibold text-sm border-b">模式/填充</th>
+                                                <th class="text-center py-3 px-4 font-semibold text-sm border-b">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- 选中行 -->
+                                            <tr class="border-b bg-blue-50 cursor-pointer hover:bg-blue-100">
+                                                <td class="py-3 px-4 font-medium">默认配置</td>
+                                                <td class="py-3 px-4">RSA</td>
+                                                <td class="py-3 px-4">UTF-8</td>
+                                                <td class="py-3 px-4">BASE64</td>
+                                                <td class="py-3 px-4 text-sm text-gray-500">N/A</td>
+                                                <td class="py-3 px-4 text-center">
+                                                    <div class="flex justify-center gap-1">
+                                                        <button class="px-2 py-1 border rounded text-sm hover:bg-gray-100 h-8 w-8">✏️</button>
+                                                        <button class="px-2 py-1 border rounded text-sm hover:bg-gray-100 h-8 w-8">🗑️</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            
+                                            <!-- 普通行 -->
+                                            <tr class="border-b bg-white cursor-pointer hover:bg-gray-50">
+                                                <td class="py-3 px-4 font-medium">AES测试配置</td>
+                                                <td class="py-3 px-4">AES</td>
+                                                <td class="py-3 px-4">UTF-8</td>
+                                                <td class="py-3 px-4">HEX</td>
+                                                <td class="py-3 px-4 text-sm text-gray-500">CBC / PKCS7</td>
+                                                <td class="py-3 px-4 text-center">
+                                                    <div class="flex justify-center gap-1">
+                                                        <button class="px-2 py-1 border rounded text-sm hover:bg-gray-100 h-8 w-8">✏️</button>
+                                                        <button class="px-2 py-1 border rounded text-sm hover:bg-gray-100 h-8 w-8">🗑️</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            
+                                            <!-- 斑马纹行 -->
+                                            <tr class="border-b bg-gray-50 cursor-pointer hover:bg-gray-100">
+                                                <td class="py-3 px-4 font-medium">SM4国密配置</td>
+                                                <td class="py-3 px-4">SM4</td>
+                                                <td class="py-3 px-4">GBK</td>
+                                                <td class="py-3 px-4">BASE64</td>
+                                                <td class="py-3 px-4 text-sm text-gray-500">ECB / ZeroPadding</td>
+                                                <td class="py-3 px-4 text-center">
+                                                    <div class="flex justify-center gap-1">
+                                                        <button class="px-2 py-1 border rounded text-sm hover:bg-gray-100 h-8 w-8">✏️</button>
+                                                        <button class="px-2 py-1 border rounded text-sm hover:bg-gray-100 h-8 w-8">🗑️</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            
+                                            <tr class="border-b bg-white cursor-pointer hover:bg-gray-50">
+                                                <td class="py-3 px-4 font-medium">开发环境配置</td>
+                                                <td class="py-3 px-4">AES</td>
+                                                <td class="py-3 px-4">ASCII</td>
+                                                <td class="py-3 px-4">BASE64_URLSAFE</td>
+                                                <td class="py-3 px-4 text-sm text-gray-500">CFB / NoPadding</td>
+                                                <td class="py-3 px-4 text-center">
+                                                    <div class="flex justify-center gap-1">
+                                                        <button class="px-2 py-1 border rounded text-sm hover:bg-gray-100 h-8 w-8">✏️</button>
+                                                        <button class="px-2 py-1 border rounded text-sm hover:bg-gray-100 h-8 w-8">🗑️</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            
+                                            <tr class="border-b bg-gray-50 cursor-pointer hover:bg-gray-100">
+                                                <td class="py-3 px-4 font-medium">生产环境配置</td>
+                                                <td class="py-3 px-4">RSA</td>
+                                                <td class="py-3 px-4">UTF-8</td>
+                                                <td class="py-3 px-4">BASE64</td>
+                                                <td class="py-3 px-4 text-sm text-gray-500">N/A</td>
+                                                <td class="py-3 px-4 text-center">
+                                                    <div class="flex justify-center gap-1">
+                                                        <button class="px-2 py-1 border rounded text-sm hover:bg-gray-100 h-8 w-8">✏️</button>
+                                                        <button class="px-2 py-1 border rounded text-sm hover:bg-gray-100 h-8 w-8">🗑️</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- 分页控件 -->
+                                <div class="flex justify-center flex-shrink-0 pt-2">
+                                    <div class="flex items-center space-x-1">
+                                        <button class="px-3 py-1 border rounded text-sm opacity-50 cursor-not-allowed">‹</button>
+                                        <button class="px-3 py-1 border rounded text-sm bg-blue-500 text-white">1</button>
+                                        <button class="px-3 py-1 border rounded text-sm hover:bg-gray-100">2</button>
+                                        <button class="px-3 py-1 border rounded text-sm hover:bg-gray-100">›</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 当前配置信息 -->
+                            <div class="mt-4 p-3 bg-gray-100 rounded-lg flex-shrink-0">
+                                <div class="text-sm text-gray-500 space-y-1">
+                                    <div>
+                                        当前配置: <span class="font-medium text-gray-900">默认配置</span>
+                                        <span class="mx-2">•</span>
+                                        算法: <span class="font-medium text-gray-900">RSA</span>
+                                    </div>
+                                    <div>
+                                        明文编码: <span class="font-medium">UTF-8</span>
+                                        <span class="mx-2">•</span>
+                                        密文编码: <span class="font-medium">BASE64</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

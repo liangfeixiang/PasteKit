@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSA 测试页面</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.3.2/jsencrypt.min.js"></script>
+</head>
+<body>
+    <h1>RSA 加密解密测试</h1>
+    <div id="result"></div>
+
+    <script type="module">
+        // 模拟导入 CipherUtils（在实际使用中会从构建后的文件导入）
+        // 这里我们直接测试 JSEncrypt 的基本功能
+        
+        const resultDiv = document.getElementById('result');
+        
+        // 测试数据
+        const testData = "Hello World! 这是一个RSA测试消息。";
+        
+        // RSA 密钥对
+        const publicKey = `-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCqGKukO1De7zhZj6+H0qtjTkVxwTCpvKe4eCZ0
+FPqri0cb2JZfXJ/DgYSF6vUpwmJG8wVQZKjeGcjDOL5UlsuusFncCzWBQ7RKNUSesmQRMSGkVb1/
+3j+skZ6UtW+5u09lHNsj6tQ51s1SPrCBkedbNf0Tp0GbMJDyR4e9T04ZZwIDAQAB
+-----END PUBLIC KEY-----`;
+
+        const privateKey = `-----BEGIN PRIVATE KEY-----
+MIICeAIBADANBgkqhkiG9w0BAQEFAASCAmIwggJeAgEAAoGBAKoYq6Q7UN7vOFmPr4fSq2NORXHB
+MKm8p7h4JnQU+quLRxvYll9cn8OBhIXq9SnCYkbzBVBkqN4ZyMM4vlSWy66wWdwLNYFDtEo1RJ6y
+ZBExIaRVvX/eP6yRnpS1b7m7T2Uc2yPq1DnWzVI+sIGR51s1/ROnQZswkPJHh71PThlnAgMBAAEC
+gYEA45gzQLi7hAfVhRictua2AlY9gfLZmwQ4WzcJaYisqMZDuBoA1KUmga8sHM7HHftzsdc+7Ulv
+4nx4i3oAqxk7a13D7mB9E+z3H+w0ZupLxQuKjfV8V0vzEOMiOktTWmDdRF6XlQqpcdbt088Hnf7Y
+33gH3ZcQ5WwDHQz1KufyDzECQQDQ3D95c3r+woW5aG/te0AhdRDGRovARLXt6MFeK9hCDsYQzHpU
+8PoDm/oUg5OAFPCkp3ZxWRZFhZfx65d32mtFAkEAwHZPJA3OdXIrhK4bvJy5rR+hxWNn8jNhg0fT
+0Q8jdz87aD8NFjJi17AgbS7WQP7wHn7sDRrNLwGC7fbsDyO1CQJBAJw1oObdyRxmRqbU6LLkoeUM
+mGYwRHuC9k0HlWgF4WsiJHdk9v/gK1dXyGX6gtxJxaE0x3W4i9JlUVrkKZf3QUICQDFPJ988NBFs
+XOUK5CvwkWh7UdRYvJ7X6FN9bGM7zjGHvlgLKEJuacwqVx1DkCEc3h76ZYIgDlJ81s4j0dECQQCs
+pG7VqXge3NjhP8SzC2G2A202R07rjd8pWWrcwFk9JtJvW4mZESxQZlKTbF4A2FZ9F7G0jvJXJeqm
+00ywl3J9
+-----END PRIVATE KEY-----`;
+
+        try {
+            // 使用 JSEncrypt 进行加密解密测试
+            const encrypt = new JSEncrypt();
+            encrypt.setPublicKey(publicKey);
+            
+            // 加密
+            const encrypted = encrypt.encrypt(testData);
+            console.log('加密结果:', encrypted);
+            
+            // 解密
+            const decrypt = new JSEncrypt();
+            decrypt.setPrivateKey(privateKey);
+            const decrypted = decrypt.decrypt(encrypted);
+            console.log('解密结果:', decrypted);
+            
+            // 验证
+            const isSuccess = testData === decrypted;
+            
+            resultDiv.innerHTML = `
+                <h2>测试结果</h2>
+                <p><strong>原始数据:</strong> ${testData}</p>
+                <p><strong>加密结果:</strong> ${encrypted}</p>
+                <p><strong>解密结果:</strong> ${decrypted}</p>
+                <p><strong>验证结果:</strong> ${isSuccess ? '✅ 成功' : '❌ 失败'}</p>
+            `;
+            
+            if (isSuccess) {
+                console.log('✅ RSA 加密解密测试通过！');
+            } else {
+                console.log('❌ RSA 加密解密测试失败！');
+            }
+            
+        } catch (error) {
+            console.error('RSA测试失败:', error);
+            resultDiv.innerHTML = `<p style="color: red;">错误: ${error.message}</p>`;
+        }
+    </script>
+</body>
+</html>

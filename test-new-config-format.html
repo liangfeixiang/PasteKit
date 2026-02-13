@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新配置格式测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .config-example {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .highlight {
+            color: #d35400;
+            font-weight: bold;
+        }
+        .comment {
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold mb-6">🔐 新密钥配置格式测试</h1>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">新配置格式示例</h2>
+            
+            <div class="config-example">
+<span class="comment">// AES 对称加密配置</span>
+{
+  "<span class="highlight">algorithm</span>": "<span class="highlight">AES/CBC/PKCS5Padding</span>",
+  "<span class="highlight">key</span>": {
+    "<span class="highlight">value</span>": "<span class="highlight">a1b2c3d4e5f67890</span>",
+    "<span class="highlight">encoding</span>": ["<span class="highlight">HEX</span>"]
+  },
+  "<span class="highlight">iv</span>": {
+    "<span class="highlight">value</span>": "<span class="highlight">0123456776543210</span>",
+    "<span class="highlight">encoding</span>": ["<span class="highlight">UTF8</span>"]
+  },
+  "<span class="highlight">plainEncoding</span>": ["<span class="highlight">UTF8</span>"],
+  "<span class="highlight">cipherEncoding</span>": ["<span class="highlight">BASE64</span>"]
+}
+            </div>
+            
+            <div class="config-example">
+<span class="comment">// RSA 非对称加密配置</span>
+{
+  "<span class="highlight">algorithm</span>": "<span class="highlight">RSA</span>",
+  "<span class="highlight">publicKey</span>": "<span class="highlight">-----BEGIN PUBLIC KEY-----...</span>",
+  "<span class="highlight">privateKey</span>": "<span class="highlight">-----BEGIN PRIVATE KEY-----...</span>",
+  "<span class="highlight">plainEncoding</span>": ["<span class="highlight">UTF8</span>"],
+  "<span class="highlight">cipherEncoding</span>": ["<span class="highlight">BASE64</span>"]
+}
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">配置格式说明</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <h3 class="font-medium text-lg">🔑 algorithm (算法)</h3>
+                    <p class="text-gray-600">完整的算法标识，包含算法名、模式和填充方式</p>
+                    <ul class="list-disc list-inside mt-2 text-sm text-gray-600">
+                        <li>AES/CBC/PKCS5Padding</li>
+                        <li>AES/ECB/PKCS5Padding</li>
+                        <li>SM4/CBC</li>
+                        <li>SM4/ECB</li>
+                        <li>RSA</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="font-medium text-lg">🔑 key/iv 结构</h3>
+                    <p class="text-gray-600">密钥和初始化向量采用对象结构，包含值和编码信息</p>
+                    <div class="mt-2 p-3 bg-gray-50 rounded">
+                        <code class="text-sm">
+                        {<br>
+                        &nbsp;&nbsp;"value": "密钥值",<br>
+                        &nbsp;&nbsp;"encoding": ["编码格式"]<br>
+                        }
+                        </code>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="font-medium text-lg">🔤 编码格式</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                        <div>
+                            <h4 class="font-medium">Key/IV 编码:</h4>
+                            <ul class="list-disc list-inside text-sm text-gray-600">
+                                <li>UTF8 - UTF-8 字符串</li>
+                                <li>HEX - 十六进制</li>
+                                <li>BASE64 - Base64 编码</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-medium">明文/密文编码:</h4>
+                            <ul class="list-disc list-inside text-sm text-gray-600">
+                                <li>UTF8 - UTF-8 字符串</li>
+                                <li>ASCII - ASCII 编码</li>
+                                <li>GBK - GBK 编码</li>
+                                <li>BASE64 - Base64 编码</li>
+                                <li>HEX - 十六进制</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-blue-50 rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 text-blue-800">✨ 优势特点</h2>
+            <ul class="space-y-2 text-blue-700">
+                <li>✅ <strong>结构化清晰</strong> - 配置信息组织更加合理</li>
+                <li>✅ <strong>编码明确</strong> - 每个字段的编码格式一目了然</li>
+                <li>✅ <strong>扩展性强</strong> - 易于添加新的配置选项</li>
+                <li>✅ <strong>兼容性好</strong> - 与现有加密工具类无缝对接</li>
+                <li>✅ <strong>易于维护</strong> - 配置结构统一，便于管理和调试</li>
+            </ul>
+        </div>
+        
+        <div class="text-center">
+            <button onclick="testConfig()" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                🧪 测试配置格式
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function testConfig() {
+            // 示例配置
+            const testConfig = {
+                algorithm: "AES/CBC/PKCS5Padding",
+                key: {
+                    value: "a1b2c3d4e5f67890",
+                    encoding: ["HEX"]
+                },
+                iv: {
+                    value: "0123456776543210",
+                    encoding: ["UTF8"]
+                },
+                plainEncoding: ["UTF8"],
+                cipherEncoding: ["BASE64"]
+            };
+            
+            console.log('🧪 测试配置:', testConfig);
+            alert('配置格式测试成功！请查看控制台输出。');
+        }
+    </script>
+</body>
+</html>
