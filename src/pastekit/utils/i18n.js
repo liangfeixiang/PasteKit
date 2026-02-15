@@ -21,6 +21,7 @@ const LANGUAGE_STORAGE_KEY = 'pasteMagicLanguage';
 let preloadedTranslations = {};
 let isPreloading = false;
 let preloadCompleted = false;
+let isInitializing = true; // 新增：标识是否正在初始化
 
 /**
  * 语言管理器类
@@ -41,6 +42,7 @@ class LanguageManager {
       this.currentLanguage = detectedLanguage;
       this.notifyListeners();
     }
+    isInitializing = false; // 初始化完成
   }
 
   /**
@@ -293,9 +295,9 @@ export function tSync(key, params = {}) {
   // 使用预加载的翻译数据
   const translations = preloadedTranslations[currentLang] || {};
   
-  if (Object.keys(translations).length === 0) {
-    // console.warn(`[I18N] No preloaded translations for ${currentLang}, returning key: ${key}`);
-    return key;
+  // 如果还在初始化阶段或者没有翻译数据，返回空字符串而不是键名
+  if (isInitializing || Object.keys(translations).length === 0) {
+    return '';
   }
   
   // 处理嵌套键 (如 'popup.detected_format')
@@ -318,13 +320,13 @@ export function tSync(key, params = {}) {
     if (pathExists) {
       translation = currentObj;
     } else {
-      translation = key;
+      translation = '';
     }
   } else {
     // 处理简单键
     translation = translations[key];
     if (translation === undefined) {
-      translation = key;
+      translation = '';
     }
   }
 
@@ -441,19 +443,35 @@ setTimeout(async () => {
   }
 }, 0);
 
-/**
- * React Hook: 使用翻译
- * @returns {[Function, string]} [翻译函数, 当前语言]
- */
 export function useTranslation() {
   const [currentLanguage, setCurrentLanguage] = React.useState(languageManager.getCurrentLanguage());
+  const [isReady, setIsReady] = React.useState(preloadCompleted && !isInitializing);
 
   React.useEffect(() => {
     const handleLanguageChange = (newLanguage) => {
       setCurrentLanguage(newLanguage);
     };
 
+    const handlePreloadComplete = () => {
+      setIsReady(true);
+    };
+
     languageManager.addListener(handleLanguageChange);
+    
+    // 监听预加载完成事件
+    if (!preloadCompleted || isInitializing) {
+      const interval = setInterval(() => {
+        if (preloadCompleted && !isInitializing) {
+          setIsReady(true);
+          clearInterval(interval);
+        }
+      }, 50);
+      
+      return () => {
+        clearInterval(interval);
+        languageManager.removeListener(handleLanguageChange);
+      };
+    }
     
     // 确保获取最新的语言设置
     setCurrentLanguage(languageManager.getCurrentLanguage());
@@ -463,8 +481,8 @@ export function useTranslation() {
     };
   }, []);
 
-  // 返回同步翻译函数
-  return [tSync, currentLanguage];
+  // 返回同步翻译函数和准备状态
+  return [tSync, currentLanguage, isReady];
 }
 
 /**

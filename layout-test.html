@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout Test - 菜单与内容区重叠测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --sidebar-width: 16rem;
+            --sidebar-width-icon: 3rem;
+        }
+        
+        .sidebar-test {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+        }
+        
+        .content-test {
+            margin-left: var(--sidebar-width);
+            padding: 1.5rem;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        
+        .content-test.collapsed {
+            margin-left: var(--sidebar-width-icon);
+        }
+        
+        .toggle-btn {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 20;
+            background: #3b82f6;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- 测试用的侧边栏 -->
+    <div class="sidebar-test" id="sidebar">
+        <div class="p-4">
+            <h2 class="text-lg font-bold mb-4">📋 菜单</h2>
+            <nav class="space-y-2">
+                <div class="p-2 bg-blue-100 rounded cursor-pointer">🔑 秘钥配置</div>
+                <div class="p-2 hover:bg-gray-100 rounded cursor-pointer">🧪 加密测试</div>
+                <div class="p-2 hover:bg-gray-100 rounded cursor-pointer">ℹ️ 关于</div>
+            </nav>
+        </div>
+    </div>
+    
+    <!-- 测试用的内容区域 -->
+    <div class="content-test" id="content">
+        <h1 class="text-2xl font-bold mb-6">📄 内容区域测试</h1>
+        
+        <div class="bg-white rounded-lg border p-6 mb-6">
+            <h3 class="text-lg font-semibold mb-3">测试内容 1</h3>
+            <p class="text-gray-700">这是一个测试段落，用来验证菜单和内容区域是否有重叠问题。如果布局正确，这里的内容应该完全可见，不会被侧边栏遮挡。</p>
+        </div>
+        
+        <div class="bg-white rounded-lg border p-6 mb-6">
+            <h3 class="text-lg font-semibold mb-3">测试内容 2</h3>
+            <p class="text-gray-700">这里是更多的测试内容。通过这个测试可以清楚地看到布局是否存在问题，以及margin-left的计算是否正确。</p>
+        </div>
+        
+        <div class="bg-white rounded-lg border p-6">
+            <h3 class="text-lg font-semibold mb-3">测试内容 3</h3>
+            <p class="text-gray-700">最后一段测试内容，确保整个页面的高度和滚动都能正常工作。</p>
+        </div>
+    </div>
+    
+    <!-- 切换按钮 -->
+    <button class="toggle-btn" onclick="toggleSidebar()">
+        切换菜单状态
+    </button>
+    
+    <script>
+        let isCollapsed = false;
+        
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            
+            isCollapsed = !isCollapsed;
+            
+            if (isCollapsed) {
+                sidebar.style.width = 'var(--sidebar-width-icon)';
+                content.classList.add('collapsed');
+            } else {
+                sidebar.style.width = 'var(--sidebar-width)';
+                content.classList.remove('collapsed');
+            }
+        }
+    </script>
+</body>
+</html>

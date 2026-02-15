@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider } from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { StorageUtils } from '../utils/storageutils.js';
@@ -25,7 +25,7 @@ const getMenuItems = (t) => [
 ];
 
 export default function OptionsPage() {
-  const [t, currentLanguage] = useTranslation();
+  const [t, currentLanguage, isReady] = useTranslation();
   const [activeSection, setActiveSection] = useState('key-config');
   const [currentConfig, setCurrentConfig] = useState(null);
   const [savedConfigs, setSavedConfigs] = useState([]);
@@ -111,258 +111,52 @@ export default function OptionsPage() {
     setCurrentConfig(config);
   };
 
+  // 当翻译未准备好时显示加载状态
+  if (!isReady || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <div className="text-xl font-medium text-gray-700">Loading...</div>
+          <div className="text-sm text-gray-500 mt-2">Preparing translation data</div>
+        </div>
+      </div>
+    );
+  }
 
-
-
-
-  // UTF-8 safe Base64 encoding
-  const utf8ToBase64 = (str) => {
-    // First convert string to UTF-8 byte array
-    const encoder = new TextEncoder();
-    const bytes = encoder.encode(str);
-    // Convert byte array to string, then perform Base64 encoding
-    const binaryString = String.fromCharCode(...bytes);
-    return btoa(binaryString);
-  };
-
-  // UTF-8 safe Base64 decoding
-  const base64ToUtf8 = (base64) => {
-    // First perform Base64 decoding
-    const binaryString = atob(base64);
-    // Convert binary string to byte array
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    // Use TextDecoder to decode to UTF-8 string
-    const decoder = new TextDecoder();
-    return decoder.decode(bytes);
-  };
-
-
-
-  // Encryption test
-  const encryptTest = async () => {
-    if (!testData.text.trim()) {
-      toast.error('Please enter test text');
-      return;
-    }
-
-    try {
-      let ciphertext;
-      
-      switch (testData.algorithm) {
-        case 'RSA':
-          if (!currentConfig?.publicKey) {
-            toast.error('Please configure RSA public key first');
-            return;
-          }
-          // Use UTF-8 safe Base64 encoding
-          ciphertext = utf8ToBase64(testData.text);
-          break;
-          
-        case 'AES/CBC/PKCS5Padding':
-        case 'AES/ECB/PKCS5Padding':
-          if (!currentConfig?.aesKey) {
-            toast.error('Please configure AES key first');
-            return;
-          }
-          // Simple XOR encryption simulation
-          ciphertext = simpleXorEncrypt(testData.text, currentConfig.aesKey);
-          break;
-          
-        default:
-          throw new Error(`Unsupported algorithm: ${testData.algorithm}`);
-      }
-
-      setTestData(prev => ({
-        ...prev,
-        encrypted: ciphertext
-      }));
-      
-      toast.success(`${testData.algorithm} encryption successful!`);
-    } catch (error) {
-      console.error('Encryption failed:', error);
-      toast.error(`Encryption failed: ${error.message}`);
-    }
-  };
-
-  // Decryption test
-  const decryptTest = async () => {
-    if (!testData.encrypted.trim()) {
-      toast.error('Please enter ciphertext');
-      return;
-    }
-
-    try {
-      let plaintext;
-      
-      switch (testData.algorithm) {
-        case 'RSA':
-          if (!currentConfig?.privateKey) {
-            toast.error('Please configure RSA private key first');
-            return;
-          }
-          // Use UTF-8 safe Base64 decoding
-          plaintext = base64ToUtf8(testData.encrypted);
-          break;
-          
-        case 'AES/CBC/PKCS5Padding':
-        case 'AES/ECB/PKCS5Padding':
-          if (!currentConfig?.aesKey) {
-            toast.error('Please configure AES key first');
-            return;
-          }
-          // Simple XOR decryption simulation
-          plaintext = simpleXorDecrypt(testData.encrypted, currentConfig.aesKey);
-          break;
-          
-        default:
-          throw new Error(`Unsupported algorithm: ${testData.algorithm}`);
-      }
-
-      setTestData(prev => ({
-        ...prev,
-        decrypted: plaintext
-      }));
-      
-      toast.success(`${testData.algorithm} decryption successful!`);
-    } catch (error) {
-      console.error('Decryption failed:', error);
-      toast.error(`Decryption failed: ${error.message}`);
-    }
-  };
-
-  // Full test
-  const fullTest = async () => {
-    if (!testData.text.trim()) {
-      toast.error('Please enter test text');
-      return;
-    }
-
-    try {
-      toast.info(`Executing ${testData.algorithm} full test...`);
-      
-      // Execute encryption
-      await encryptTest();
-      
-      // Wait for state update
-      setTimeout(async () => {
-        // Execute decryption
-        await decryptTest();
-        
-        // Verify results
-        setTimeout(() => {
-          if (testData.text === testData.decrypted) {
-            toast.success(`${testData.algorithm} full test passed!`);
-          } else {
-            toast.error(`${testData.algorithm} test failed! Original text does not match decrypted result.`);
-          }
-        }, 100);
-      }, 100);
-      
-    } catch (error) {
-      console.error('Full test failed:', error);
-      toast.error(`Full test failed: ${error.message}`);
-    }
-  };
-
-  // Simple XOR encryption function (UTF-8 support)
-  const simpleXorEncrypt = (text, key) => {
-    let result = '';
-    for (let i = 0; i < text.length; i++) {
-      result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-    }
-    return utf8ToBase64(result);
-  };
-
-  const simpleXorDecrypt = (encrypted, key) => {
-    const text = base64ToUtf8(encrypted);
-    let result = '';
-    for (let i = 0; i < text.length; i++) {
-      result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-    }
-    return result;
-  };
-
-  // URL-safe Base64 encoding (compliant with project specifications)
-  const base64ToUrlSafe = (base64Str) => {
-    return base64Str.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-  };
-
-  const urlSafeToBase64 = (urlSafeStr) => {
-    let base64Str = urlSafeStr.replace(/-/g, '+').replace(/_/g, '/');
-    // Add missing padding characters
-    while (base64Str.length % 4 !== 0) {
-      base64Str += '=';
-    }
-    return base64Str;
-  };
-
-  // 渲染不同页面内容
-  const renderContent = () => {
-    switch (activeSection) {
-      case 'key-config':
-        return (
-          <div className="space-y-6 h-full w-full">
-            {/* Main configuration management area - occupies more space */}
-            <div className="w-full">
-              <KeyConfigManager
-                initialConfigs={savedConfigs}
-                onConfigChange={handleConfigChange}
-                showGenerateButton={true}
-              />
-            </div>
-          </div>
-        );
-
-      case 'encryption-test':
-        return (
-          <div className="space-y-6 h-full">
-            <CipherTestComponent 
-              configs={savedConfigs}
-              selectedConfig={currentConfig}
-              className="h-full"
-            />
-          </div>
-        );
-
-      case 'about':
-        return <AboutComponent />;
-
-      default:
-        return null;
-    }
-  };
+  // Menu items configuration (will be translated dynamically)
+  const menuItems = getMenuItems(t);
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen bg-background w-full">
-        {/* 左侧菜单栏 */}
-        <Sidebar className="w-64 border-r flex-shrink-0 relative z-10">
+      <div className="flex h-screen bg-gray-50">
+        {/* Sidebar */}
+        <Sidebar className="border-r bg-white" variant="sidebar">
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupContent>
-                <div className="p-4 border-b bg-background">
-                  <h2 className="text-xl font-bold">PasteMagic</h2>
-                  <p className="text-sm text-muted-foreground">Settings Center</p>
-                  {/* Language Switcher - 一行展示，靠右边 */}
-                  <div className="mt-3 pt-2 border-t">
-                    <LanguageSwitcher 
-                      variant="horizontal" 
-                      className="justify-end"
-                    />
-                  </div>
+                <div className="p-4">
+                  <LanguageSwitcher variant="vertical" />
                 </div>
+                <Separator className="my-2" />
+              </SidebarGroupContent>
+            </SidebarGroup>
+            
+            <SidebarGroup>
+              <SidebarGroupContent>
                 <SidebarMenu>
-                  {getMenuItems(t).map((item) => (
+                  {menuItems.map((item) => (
                     <SidebarMenuItem key={item.id}>
-                      <SidebarMenuButton
+                      <SidebarMenuButton 
                         isActive={activeSection === item.id}
                         onClick={() => setActiveSection(item.id)}
-                        className="justify-start px-4 py-2"
                       >
-                        <span>{item.label}</span>
+                        <span className="mr-2">
+                          {item.icon === 'key' && '🔐'}
+                          {item.icon === 'test-tube' && '🧪'}
+                          {item.icon === 'info' && 'ℹ️'}
+                        </span>
+                        {item.label}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
@@ -372,17 +166,36 @@ export default function OptionsPage() {
           </SidebarContent>
         </Sidebar>
 
-        {/* 主内容区域 */}
-        <div className="flex-1 overflow-auto relative w-full">
-          <div className="p-4 min-h-full">
-            <div className="w-full">
-              {renderContent()}
-            </div>
+        {/* Main Content */}
+        <SidebarInset>
+          <div className="flex-1 overflow-auto p-6">
+            {activeSection === 'key-config' && (
+              <KeyConfigManager 
+                onConfigChange={handleConfigChange}
+                initialConfigs={savedConfigs}
+              />
+            )}
+            
+            {activeSection === 'encryption-test' && (
+              <div className="space-y-6 max-w-6xl mx-auto">
+                <h1 className="text-2xl font-bold">{t('options.sidebar.encryption_test')}</h1>
+                <CipherTestComponent 
+                  configs={savedConfigs}
+                  selectedConfig={currentConfig}
+                />
+              </div>
+            )}
+            
+            {activeSection === 'about' && (
+              <div className="max-w-6xl mx-auto">
+                <AboutComponent />
+              </div>
+            )}
           </div>
-        </div>
-
-        <Toaster />
+        </SidebarInset>
       </div>
+      
+      <Toaster />
     </SidebarProvider>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { useTranslation } from '../utils/i18n';
 
 // QR Code generation utility for canvas-based QR codes
 const generateQRCode = (text, size = 200) => {
@@ -80,6 +81,7 @@ export default function QRCodeComponent({
     type = 'svg', // 'svg' or 'canvas'
     regenerateCallback // 用于重新生成的回调函数
 }) {
+    const [t] = useTranslation();
     const [qrSize, setQrSize] = useState(size);
     const [qrCodeData, setQrCodeData] = useState(null);
 

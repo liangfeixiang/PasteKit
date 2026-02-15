@@ -311,7 +311,7 @@ export default function CipherTestComponent({
   const currentConfig = getCurrentConfig();
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`space-y-4 w-full ${className}`}>
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

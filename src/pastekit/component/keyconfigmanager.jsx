@@ -3,12 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import CipherTool from './ciphertool';
-import CipherTestComponent from './ciphertest';
 import ConfigList from './configlist';
 import ConfigPagination from './configpagination';
+import ConfigEditor from './configeditor';
 // 引入常量和工具
 import { NEED_PADDING_MODES, ITEMS_PER_PAGE } from '../utils/keyconfigconstants';
 import {ConfigManager, loadConfigs, saveConfigs} from '../utils/keyconfigutils';
@@ -18,7 +15,6 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { toast } from 'sonner';
 import { StorageUtils } from '../utils/storageutils';
 import { useTranslation } from '../utils/i18n';
-import ConfigTestPanel from "@/pastekit/component/configtestpanel.jsx";
 
 /**
  * Key configuration management component
@@ -39,7 +35,6 @@ export default function KeyConfigManager({
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5); // Display 5 configurations per page
   const [isLoading, setIsLoading] = useState(false);
-  const [showTestPanel, setShowTestPanel] = useState(false);
 
   // 计算分页数据
   const totalPages = Math.ceil(configs.length / itemsPerPage);
@@ -323,14 +318,7 @@ export default function KeyConfigManager({
           <CardTitle className="flex items-center justify-between">
             <span>🔐 {t('components.keyconfigmanager.title')}</span>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setShowTestPanel(!showTestPanel)}
-                className={showTestPanel ? 'bg-primary text-primary-foreground' : ''}
-              >
-                🧪  {t('components.keyconfigmanager.test_panel')}
-              </Button>
+
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button 
@@ -386,15 +374,6 @@ export default function KeyConfigManager({
           </CardTitle>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col overflow-hidden">
-          {/* 测试面板 */}
-          {showTestPanel && (
-            <div className="mb-6">
-              <ConfigTestPanel 
-                configs={configs}
-                selectedConfig={getCurrentConfig()}
-              />
-            </div>
-          )}
           <div className="space-y-4 flex-1 flex flex-col">
             <div className="flex justify-between items-center flex-shrink-0">
               <h3 className="text-lg font-semibold">{t('components.keyconfigmanager.config_list')}</h3>

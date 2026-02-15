@@ -189,65 +189,6 @@ const detectContentType = async (content) => {
         }
     }
 
-    // Detect JSON format - Support incomplete JSON fragments
-    // Exclude pure number cases
-    const numberPattern = /^\d+$/;
-    if (numberPattern.test(trimmedContent)) {
-        // Pure numbers are not considered JSON
-    } else {
-        // Check if it contains obvious JSON characteristics
-        const jsonIndicators = [
-            /^\s*\{/,           // Starts with {
-            /\}\s*$/,           // Ends with }
-            /"[^"]*":/,        // Contains key-value pair format
-            /\[\s*\]/,         // Empty array
-            /\{\s*\}/          // Empty object
-        ];
-
-        const hasJsonIndicators = jsonIndicators.some(pattern => pattern.test(trimmedContent));
-
-        if (hasJsonIndicators) {
-            // Try strict parsing
-            try {
-                JSON.parse(trimmedContent);
-                return 'json';
-            } catch (e) {
-                // Strict parsing failed, but contains JSON characteristics, still mark as json for JsonTool to handle
-                // JsonTool component will be responsible for displaying error messages and repair suggestions
-                return 'json';
-            }
-        }
-    }
-
-    // Completely not JSON format
-    // 排除简单类型后再尝试解析
-    const isSimpleType = trimmedContent && (
-        // 纯数字（整数或小数）
-        /^\d+(\.\d+)?$/.test(trimmedContent) ||
-        // 纯字符串（带引号）
-        (/^".*"$/.test(trimmedContent) && trimmedContent.length > 2) ||
-        // 布尔值
-        trimmedContent === 'true' || 
-        trimmedContent === 'false' ||
-        // null值
-        trimmedContent === 'null'
-    );
-    
-    // 只有非简单类型才尝试JSON解析
-    if (!isSimpleType) {
-        try {
-            JSON.parse(trimmedContent);
-            return 'json';
-        } catch (e) {
-            // Not valid JSON
-        }
-    }
-
-    // Detect URL format - Consider as URL if starts with http
-    if (trimmedContent.toLowerCase().startsWith('http')) {
-        return 'url';
-    }
-
     // Detect URL encoding characteristics (%xx format) and verify if decoded content contains http
     const urlEncodedPattern = /%[0-9A-Fa-f]{2}/;
     if (urlEncodedPattern.test(trimmedContent)) {
@@ -277,10 +218,8 @@ const detectContentType = async (content) => {
     return 'encode';
 };
 
-
-
 export default function PopUp() {
-    const [t, currentLanguage] = useTranslation();
+    const [t, currentLanguage, isReady] = useTranslation();
     const [content, setContent] = useState('');
     const maxHeight = useChromePopupHeight();
     const [contentType, setContentType] = useState('encode');
@@ -304,12 +243,15 @@ export default function PopUp() {
         initializeTranslations();
     }, []);
 
-    // 自动聚焦到Textarea
+    // 自动聚焦到Textarea - 在翻译准备好后执行
     useEffect(() => {
-        if (textareaRef.current) {
+        if (textareaRef.current && isReady) {
+            console.log('[Popup] Auto-focusing textarea');
             textareaRef.current.focus();
+            // 也可以选择性地选中所有文本
+            // textareaRef.current.select();
         }
-    }, []);
+    }, [isReady]); // 依赖isReady确保在翻译准备好后聚焦
 
     // 内容类型检测（异步）
     useEffect(() => {
@@ -371,6 +313,18 @@ export default function PopUp() {
 
     // Render corresponding components based on content type
     const renderToolComponent = () => {
+        // 当翻译未准备好时显示加载状态
+        if (!isReady) {
+            return (
+                <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                        <div className="text-sm text-gray-500">Loading translations...</div>
+                    </div>
+                </div>
+            );
+        }
+
         // When content is empty, display default local IP
         if (!content || content.trim() === '') {
             return <IpTool content={content} showMyIp={true} />;
@@ -401,6 +355,19 @@ export default function PopUp() {
                 return <EncodeTool content={content} />;
         }
     };
+
+    // 当翻译未准备好时显示整体加载状态
+    if (!isReady) {
+        return (
+            <div className="w-[500px] h-[600px] flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <div className="text-lg font-medium text-gray-700">Loading...</div>
+                    <div className="text-sm text-gray-500 mt-2">Preparing translation data</div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={`w-[500px] h-[600px] border rounded flex flex-col overflow-hidden`}>
@@ -453,129 +420,117 @@ export default function PopUp() {
                     </div>
                 </div>
             </div>
-
-            {/* Tool area with fixed height and scroll */}
-            <div className="flex-1 min-h-[300px] max-h-[400px] overflow-y-auto tool-scroll-container" style={{scrollbarWidth: 'thin'}}>  
-                <div className="p-3">
-                    {renderToolComponent()}
-                </div>
+            
+            {/* 可滚动的内容区域 */}
+            <div className="flex-1 overflow-y-auto">
+                {renderToolComponent()}
             </div>
             
-            {/* Fixed footer - 绝对不滚动且始终可见 */}
-            <div className="shrink-0 py-2 px-3 border-t bg-gray-50">
+            {/* Footer */}
+            <div className="shrink-0 border-t bg-gray-50 px-4 py-3 flex justify-center items-center gap-4">
                 <TooltipProvider delayDuration={100}>
-                {/* Action Buttons */}
-                <div className="flex justify-center items-center space-x-4">
-                {/* Advanced Settings */}
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <button
-                            onClick={() => {
-                                if (chrome && chrome.runtime && chrome.runtime.openOptionsPage) {
-                                    chrome.runtime.openOptionsPage();
-                                } else {
-                                    window.open(chrome.runtime.getURL('options.html'), '_blank');
-                                }
-                            }}
-                            className="text-gray-600 hover:text-gray-900 transition-colors duration-200"
-                        >
-                            <Settings className="w-5 h-5" />
-                        </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>{t('common.advanced_settings')}</p>
-                    </TooltipContent>
-                </Tooltip>
-                
-                {/* Video Tutorial */}
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <a
-                            href="https://www.youtube.com/@PasteKitLab"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-red-600 hover:text-red-700 transition-colors duration-200"
-                        >
-                            <Video className="w-5 h-5" />
-                        </a>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>{t('common.video_tutorial')}</p>
-                    </TooltipContent>
-                </Tooltip>
-                
-                {/* Documentation */}
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <a
-                            href="https://liangfeixiang.github.io/"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-700 transition-colors duration-200"
-                        >
-                            <Book className="w-5 h-5" />
-                        </a>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>{t('common.documentation')}</p>
-                    </TooltipContent>
-                </Tooltip>
-                
-                {/* Feedback */}
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <a
-                            href="https://github.com/liangfeixiang/PasteKit/issues"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-green-600 hover:text-green-700 transition-colors duration-200"
-                        >
-                            <MessageSquare className="w-5 h-5" />
-                        </a>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>{t('common.feedback')}</p>
-                    </TooltipContent>
-                </Tooltip>
-                
-                {/* Donate */}
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <a
-                            href="https://www.buymeacoffee.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-amber-600 hover:text-amber-700 transition-colors duration-200"
-                        >
-                            <Coffee className="w-5 h-5" />
-                        </a>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>{t('common.donate')}</p>
-                    </TooltipContent>
-                </Tooltip>
-                
-                {/* GitHub */}
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <a
-                            href="https://github.com/liangfeixiang/PasteMagic"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-800 hover:text-gray-900 transition-colors duration-200"
-                        >
-                            <Github className="w-5 h-5" />
-                        </a>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>{t('common.github_repository')}</p>
-                    </TooltipContent>
-                </Tooltip>
-                </div>
+                    {/* Advanced Settings */}
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <a
+                                href="options.html"
+                                target="_blank"
+                                className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                            >
+                                <Settings className="w-5 h-5" />
+                            </a>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{t('common.advanced_settings')}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    
+                    {/* Video Tutorial */}
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <a
+                                href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-red-600 hover:text-red-700 transition-colors duration-200"
+                            >
+                                <Video className="w-5 h-5" />
+                            </a>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{t('common.video_tutorial')}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    
+                    {/* Documentation */}
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <a
+                                href="https://github.com/liangfeixiang/PasteKit"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-700 transition-colors duration-200"
+                            >
+                                <Book className="w-5 h-5" />
+                            </a>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{t('common.documentation')}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    
+                    {/* Feedback */}
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <a
+                                href="https://github.com/liangfeixiang/PasteKit/issues"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-green-600 hover:text-green-700 transition-colors duration-200"
+                            >
+                                <MessageSquare className="w-5 h-5" />
+                            </a>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{t('common.feedback')}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    
+                    {/* Donate */}
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <a
+                                href="https://buymeacoffee.com/example"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-yellow-600 hover:text-yellow-700 transition-colors duration-200"
+                            >
+                                <Coffee className="w-5 h-5" />
+                            </a>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{t('common.donate')}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    
+                    {/* GitHub */}
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <a
+                                href="https://github.com/liangfeixiang/PasteKit"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-gray-900 text-white p-1 rounded hover:bg-gray-800 transition-colors duration-200"
+                            >
+                                <Github className="w-5 h-5" />
+                            </a>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{t('common.github_repository')}</p>
+                        </TooltipContent>
+                    </Tooltip>
                 </TooltipProvider>
             </div>
         </div>
     );
 }
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<PopUp/>);

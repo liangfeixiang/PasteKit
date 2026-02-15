@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout Debug - 布局调试工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --sidebar-width: 16rem;
+            --sidebar-width-icon: 3rem;
+        }
+        
+        .debug-sidebar {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            width: var(--sidebar-width);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-right: 2px solid #4f46e5;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .debug-content {
+            margin-left: var(--sidebar-width);
+            padding: 1.5rem;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .debug-content.collapsed {
+            margin-left: var(--sidebar-width-icon);
+        }
+        
+        .debug-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 60;
+            background: #10b981;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+        }
+        
+        .debug-toggle:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        
+        .debug-indicator {
+            position: fixed;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            z-index: 55;
+            background: #ef4444;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+            font-size: 0.875rem;
+            font-weight: 600;
+            box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .content-box {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+        
+        .overlap-warning {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            border: 2px solid #fecaca;
+            font-weight: 600;
+            z-index: 100;
+            display: none;
+        }
+        
+        .overlap-warning.show {
+            display: block;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 重叠警告 -->
+    <div class="overlap-warning" id="overlapWarning">
+        ⚠️ 检测到布局重叠！请调整CSS变量值
+    </div>
+    
+    <!-- 调试指示器 -->
+    <div class="debug-indicator" id="indicator">
+        展开状态
+    </div>
+    
+    <!-- 调试用的侧边栏 -->
+    <div class="debug-sidebar" id="sidebar">
+        <div class="p-6">
+            <h2 class="text-xl font-bold text-white mb-6">📋 调试菜单</h2>
+            <nav class="space-y-3">
+                <div class="p-3 bg-white/20 backdrop-blur-sm rounded-lg cursor-pointer hover:bg-white/30 transition-all">
+                    <div class="text-white font-medium">🔑 秘钥配置</div>
+                    <div class="text-white/80 text-sm mt-1">管理加密秘钥和配置</div>
+                </div>
+                <div class="p-3 bg-white/10 backdrop-blur-sm rounded-lg cursor-pointer hover:bg-white/20 transition-all">
+                    <div class="text-white font-medium">🧪 加密测试</div>
+                    <div class="text-white/80 text-sm mt-1">测试加密解密功能</div>
+                </div>
+                <div class="p-3 bg-white/10 backdrop-blur-sm rounded-lg cursor-pointer hover:bg-white/20 transition-all">
+                    <div class="text-white font-medium">ℹ️ 关于</div>
+                    <div class="text-white/80 text-sm mt-1">查看应用信息</div>
+                </div>
+            </nav>
+        </div>
+    </div>
+    
+    <!-- 调试用的内容区域 -->
+    <div class="debug-content" id="content">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold text-gray-800 mb-8">🎯 布局调试面板</h1>
+            
+            <div class="content-box">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">📊 当前状态</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <div class="text-sm text-gray-600">侧边栏宽度</div>
+                        <div class="text-lg font-bold text-blue-600" id="sidebarWidth">16rem (256px)</div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <div class="text-sm text-gray-600">内容左边距</div>
+                        <div class="text-lg font-bold text-green-600" id="contentMargin">16rem (256px)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-box">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">🔧 调试控制</h3>
+                <div class="flex flex-wrap gap-3">
+                    <button class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors" onclick="setWidth('12rem')">
+                        宽侧边栏 (12rem)
+                    </button>
+                    <button class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors" onclick="setWidth('16rem')">
+                        标准宽度 (16rem)
+                    </button>
+                    <button class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors" onclick="setWidth('20rem')">
+                        宽侧边栏 (20rem)
+                    </button>
+                    <button class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors" onclick="checkOverlap()">
+                        🔍 检查重叠
+                    </button>
+                </div>
+            </div>
+            
+            <div class="content-box">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">📝 测试内容</h3>
+                <p class="text-gray-600 leading-relaxed mb-4">
+                    这里是主要内容区域。当布局正确时，这段文字应该完全可见，
+                    不会被左侧的菜单栏遮挡。您可以点击上方的按钮来测试不同的
+                    侧边栏宽度设置。
+                </p>
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                    <p class="text-yellow-700">
+                        <strong>提示：</strong> 如果看到红色警告框，说明存在布局重叠问题。
+                        请调整CSS变量直到警告消失。
+                    </p>
+                </div>
+            </div>
+            
+            <div class="content-box">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">📋 布局要求</h3>
+                <ul class="space-y-2 text-gray-600">
+                    <li class="flex items-start">
+                        <span class="text-green-500 mr-2">✓</span>
+                        <span>侧边栏应固定在左侧，不随滚动移动</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-green-500 mr-2">✓</span>
+                        <span>内容区域应根据侧边栏状态自动调整左边距</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-green-500 mr-2">✓</span>
+                        <span>展开时：margin-left = 侧边栏宽度</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-green-500 mr-2">✓</span>
+                        <span>收起时：margin-left = 图标宽度 (3rem)</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-green-500 mr-2">✓</span>
+                        <span>任何状态下都不应出现内容被遮挡的情况</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 切换按钮 -->
+    <button class="debug-toggle" onclick="toggleSidebar()" id="toggleBtn">
+        切换菜单状态
+    </button>
+    
+    <script>
+        let isCollapsed = false;
+        let currentWidth = '16rem';
+        
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            const indicator = document.getElementById('indicator');
+            const toggleBtn = document.getElementById('toggleBtn');
+            
+            isCollapsed = !isCollapsed;
+            
+            if (isCollapsed) {
+                sidebar.style.width = 'var(--sidebar-width-icon)';
+                content.classList.add('collapsed');
+                indicator.textContent = '收起状态';
+                indicator.style.background = '#f59e0b';
+                toggleBtn.textContent = '展开菜单';
+            } else {
+                sidebar.style.width = `var(--sidebar-width)`;
+                content.classList.remove('collapsed');
+                indicator.textContent = '展开状态';
+                indicator.style.background = '#ef4444';
+                toggleBtn.textContent = '切换菜单状态';
+            }
+            
+            updateDisplayValues();
+            checkOverlap();
+        }
+        
+        function setWidth(width) {
+            document.documentElement.style.setProperty('--sidebar-width', width);
+            currentWidth = width;
+            updateDisplayValues();
+            checkOverlap();
+        }
+        
+        function updateDisplayValues() {
+            const sidebarWidthEl = document.getElementById('sidebarWidth');
+            const contentMarginEl = document.getElementById('contentMargin');
+            
+            const widthPx = Math.round(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width')) * 16);
+            const iconWidthPx = Math.round(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width-icon')) * 16);
+            
+            sidebarWidthEl.textContent = `${currentWidth} (${widthPx}px)`;
+            contentMarginEl.textContent = isCollapsed ? 
+                `3rem (${iconWidthPx}px)` : 
+                `${currentWidth} (${widthPx}px)`;
+        }
+        
+        function checkOverlap() {
+            const warning = document.getElementById('overlapWarning');
+            const contentRect = document.getElementById('content').getBoundingClientRect();
+            const sidebarRect = document.getElementById('sidebar').getBoundingClientRect();
+            
+            // 检查是否有重叠
+            const hasOverlap = contentRect.left < sidebarRect.right + 10;
+            
+            if (hasOverlap) {
+                warning.classList.add('show');
+            } else {
+                warning.classList.remove('show');
+            }
+        }
+        
+        // 初始化
+        updateDisplayValues();
+        checkOverlap();
+        
+        // 窗口大小改变时重新检查
+        window.addEventListener('resize', checkOverlap);
+    </script>
+</body>
+</html>

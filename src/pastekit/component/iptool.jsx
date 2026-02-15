@@ -376,34 +376,7 @@ export default function IpTool({ content, showMyIp = true }) {
                 </div>
             )}
 
-            {/* Local IP display */}
-            {showMyIp && myIpInfo && (
-                <div className="space-y-4">
-                    <div className="border rounded-lg p-4 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm">
-                        <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-semibold text-gray-700">{t('components.iptool.local_ip')}</h4>
-                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                                {t('components.iptool.auto_acquired')}
-                            </span>
-                        </div>
-                        
-                        {myIpInfo.error ? (
-                            <div className="text-red-600 text-sm text-center py-2">
-                                ❌ {myIpInfo.error}
-                            </div>
-                        ) : (
-                            <div className="text-center">
-                                <div className="text-2xl font-mono font-bold text-gray-800 mb-1 max-w-full break-all overflow-x-auto">
-                                    {myIpInfo.ipAddress}
-                                </div>
-                                <div className="text-xs text-gray-600">
-                                    {t('components.iptool.ipv_version', { version: myIpInfo.ipVersion })}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
+
 
             {/* Content IP information display */}
             {content && (
@@ -590,7 +563,35 @@ export default function IpTool({ content, showMyIp = true }) {
                     <div className="text-sm mt-1">{t('components.iptool.example')} 221.111.111.111 {t('components.iptool.or')} 2001:db8::1 {t('components.iptool.or')} 192.168.1.0/24 {t('components.iptool.or')} 2001:db8::/32</div>
                 </div>
             )}
+            {/* Local IP display */}
+            {showMyIp && myIpInfo && (
+                <div className="space-y-4">
+                    <div className="border rounded-lg p-4 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm">
+                        <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-semibold text-gray-700">{t('components.iptool.local_ip')}</h4>
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                {t('components.iptool.auto_acquired')}
+                            </span>
+                        </div>
 
+                        {myIpInfo.error ? (
+                            <div className="text-red-600 text-sm text-center py-2">
+                                ❌ {myIpInfo.error}
+                            </div>
+                        ) : (
+                            <div className="text-center">
+                                <div className="text-2xl font-mono font-bold text-gray-800 mb-1 max-w-full break-all overflow-x-auto">
+                                    {myIpInfo.ipAddress}
+                                </div>
+                                <div className="text-xs text-gray-600">
+                                    {t('components.iptool.ipv_version', { version: myIpInfo.ipVersion })}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+            
             {/* Empty state notification */}
             {!content && !myIpInfo && !isFetchingMyIp && (
                 <div className="text-center text-gray-500 py-8">

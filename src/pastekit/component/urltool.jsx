@@ -53,6 +53,62 @@ const isBase64Encoded = (str) => {
     }
 };
 
+// 检测是否为十六进制编码
+const isHexEncoded = (str) => {
+    // 十六进制字符串只能包含 0-9, A-F, a-f 这些字符，且长度为偶数
+    const hexRegex = /^[0-9A-Fa-f]+$/;
+    return hexRegex.test(str) && str.length % 2 === 0;
+};
+
+// Hex编码
+const encodeHex = (str) => {
+    try {
+        return Array.from(new TextEncoder().encode(str))
+            .map(byte => byte.toString(16).padStart(2, '0'))
+            .join('');
+    } catch (e) {
+        throw new Error('Hex encoding failed: ' + e.message);
+    }
+};
+
+// Hex解码
+const decodeHex = (hex) => {
+    try {
+        if (hex.length % 2 !== 0) {
+            // 如果长度为奇数，在前面补0
+            hex = '0' + hex;
+        }
+        // 将十六进制字符串转换为字节数组
+        const bytes = new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+        
+        // 首先尝试按UTF-8文本解码
+        const decoder = new TextDecoder('utf-8');
+        const decodedText = decoder.decode(bytes);
+        
+        // 检查解码后的文本是否主要包含可打印字符
+        // 可打印字符包括：字母、数字、常见标点符号、空格
+        const printableChars = decodedText.match(/[\x20-\x7E\u4e00-\u9fff]/g);
+        const printableRatio = printableChars ? printableChars.length / decodedText.length : 0;
+        
+        // 如果可打印字符少于70%，则显示为字节数组
+        if (printableRatio < 0.7) {
+            // 返回字节数组表示形式，带元数据
+            return {
+                value: bytes.map(byte => '0x' + byte.toString(16).padStart(2, '0')).join(' '),
+                isByteArray: true,
+                byteCount: bytes.length
+            };
+        }
+        
+        return {
+            value: decodedText,
+            isByteArray: false
+        };
+    } catch (e) {
+        throw new Error('Hex decoding failed: ' + e.message);
+    }
+};
+
 export default function UrlTool({ content }) {
     const [t] = useTranslation();
     
